@@ -5,6 +5,13 @@ namespace Sidewing {
         SEPARATOR
     }
 
+    public enum PluginVariableType {
+        STRING,
+        NUMBER,
+        BOOLEAN,
+        SELECT
+    }
+
     public class MonitorInfo : Object {
         public string id { get; construct set; }
         public string display_name { get; construct set; }
@@ -43,14 +50,46 @@ namespace Sidewing {
         public string filename { get; construct set; }
         public string display_name { get; construct set; }
         public uint refresh_seconds { get; construct set; }
+        public Gee.ArrayList<PluginVariableDefinition> variable_definitions { get; construct set; }
         public bool enabled { get; set; default = true; }
 
-        public PluginDefinition(string path, string filename, string display_name, uint refresh_seconds) {
+        public PluginDefinition(
+            string path,
+            string filename,
+            string display_name,
+            uint refresh_seconds,
+            Gee.ArrayList<PluginVariableDefinition>? variable_definitions = null
+        ) {
             Object(
                 path: path,
                 filename: filename,
                 display_name: display_name,
-                refresh_seconds: refresh_seconds
+                refresh_seconds: refresh_seconds,
+                variable_definitions: variable_definitions ?? new Gee.ArrayList<PluginVariableDefinition>()
+            );
+        }
+    }
+
+    public class PluginVariableDefinition : Object {
+        public PluginVariableType variable_type { get; construct set; }
+        public string name { get; construct set; }
+        public string default_value { get; construct set; }
+        public string description { get; construct set; }
+        public Gee.ArrayList<string> options { get; construct set; }
+
+        public PluginVariableDefinition(
+            PluginVariableType variable_type,
+            string name,
+            string default_value,
+            string description,
+            Gee.ArrayList<string>? options = null
+        ) {
+            Object(
+                variable_type: variable_type,
+                name: name,
+                default_value: default_value,
+                description: description,
+                options: options ?? new Gee.ArrayList<string>()
             );
         }
     }

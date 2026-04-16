@@ -1,6 +1,7 @@
 namespace Sidewing {
     public class PluginManager : Object {
         private SettingsStore settings_store;
+        private VariablesStore variables_store;
         private PluginRunner plugin_runner;
         private XbarParser xbar_parser;
         private LogService log_service;
@@ -11,11 +12,13 @@ namespace Sidewing {
 
         public PluginManager(
             SettingsStore settings_store,
+            VariablesStore variables_store,
             PluginRunner plugin_runner,
             XbarParser xbar_parser,
             LogService log_service
         ) {
             this.settings_store = settings_store;
+            this.variables_store = variables_store;
             this.plugin_runner = plugin_runner;
             this.xbar_parser = xbar_parser;
             this.log_service = log_service;
@@ -156,6 +159,11 @@ namespace Sidewing {
 
                     string filename = info.get_name();
                     if (!is_executable(info)) {
+                        if (looks_like_script(filename)) {
+                            log_service.warning(
+                                @"Ignoring non-executable script plugin candidate: $(filename)"
+                            );
+                        }
                         continue;
                     }
 
@@ -165,12 +173,15 @@ namespace Sidewing {
                     }
 
                     var child = directory.get_child(filename);
+                    var variable_definitions = variables_store.load_variable_definitions(child.get_path());
                     var definition = new PluginDefinition(
                         child.get_path(),
                         filename,
                         build_display_name(filename),
-                        refresh_seconds
+                        refresh_seconds,
+                        variable_definitions
                     );
+                    variables_store.sync_sidecar(definition);
                     definitions.add(definition);
                     log_service.info(@"Discovered plugin $(filename) ($(refresh_seconds)s)");
                 }
@@ -246,6 +257,12 @@ namespace Sidewing {
         private bool is_executable(FileInfo info) {
             uint32 mode = info.get_attribute_uint32(FileAttribute.UNIX_MODE);
             return (mode & 0111) != 0;
+        }
+
+        private bool looks_like_script(string filename) {
+            return filename.has_suffix(".sh") ||
+                filename.has_suffix(".py") ||
+                filename.has_suffix(".rb");
         }
 
         private string build_display_name(string filename) {

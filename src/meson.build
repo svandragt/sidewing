@@ -38,6 +38,7 @@ executable(
     glib_dep,
     gobject_dep,
     gee_dep,
+    json_glib_dep,
     x11_dep,
   ],
   install: false,

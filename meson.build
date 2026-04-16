@@ -15,6 +15,7 @@ gio_dep = dependency('gio-2.0')
 glib_dep = dependency('glib-2.0')
 gobject_dep = dependency('gobject-2.0')
 gee_dep = dependency('gee-0.8')
+json_glib_dep = dependency('json-glib-1.0')
 x11_dep = dependency('x11')
 
 add_project_arguments(

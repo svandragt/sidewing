@@ -33,7 +33,7 @@ The implementation is narrower than the long-term spec.
 - `terminal=true` command launching is not implemented yet; command actions currently run without a terminal
 - Unsupported xbar metadata is ignored
 - Only the first bar line is shown as the visible title
-- Plugin variables are stubbed out and not yet user-configurable
+- Plugin variables are loaded from `<plugin>.vars.json`; there is no in-app variables editor yet
 
 ## Build Requirements
 
@@ -141,6 +141,7 @@ Currently recognized metadata:
 
 Environment variables set for plugins:
 
+- configured `<xbar.var>` values from `<plugin>.vars.json`
 - `SIDEWING=1`
 - `XBAR=1`
 - `SIDEWING_PLUGIN_PATH`
@@ -149,6 +150,25 @@ Environment variables set for plugins:
 This renamed the older `STABA_*` variables. Existing plugins that read those names need to be updated.
 
 Plugins run with their own directory as the current working directory.
+
+## Plugin Variables
+
+Sidewing supports xbar-style variable metadata in plugin comments:
+
+```text
+# <xbar.var>string(VAR_NAME="Sidewing"): Display name.</xbar.var>
+# <xbar.var>number(VAR_COUNT=3): Number of rows.</xbar.var>
+# <xbar.var>boolean(VAR_VERBOSE=false): Show extra detail?</xbar.var>
+# <xbar.var>select(VAR_STYLE="normal"): Style preset. [compact, normal, loud]</xbar.var>
+```
+
+When a plugin with variables is discovered, Sidewing creates a sidecar file next to it:
+
+```text
+plugin.1m.sh.vars.json
+```
+
+That JSON file stores the current values and Sidewing exports them as environment variables before each plugin run. Variable values are user-configurable by editing the sidecar JSON file and refreshing the plugin.
 
 ## Examples
 
@@ -159,6 +179,7 @@ Bundled examples live in [`examples/plugins`](./examples/plugins/):
 - [`available-disk-space.1m.sh`](./examples/plugins/available-disk-space.1m.sh)
 - [`public-ip.5m.sh`](./examples/plugins/public-ip.5m.sh)
 - [`github-assigned-prs.5m.sh`](./examples/plugins/github-assigned-prs.5m.sh)
+- [`variable-demo.1m.sh`](./examples/plugins/variable-demo.1m.sh)
 
 The GitHub example requires the `gh` CLI and an authenticated session.
 

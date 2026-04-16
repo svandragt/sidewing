@@ -46,14 +46,20 @@ namespace Sidewing {
             }
 
             settings_store = new SettingsStore();
-            variables_store = new VariablesStore();
             log_service = new LogService();
+            variables_store = new VariablesStore(log_service);
             desktop_integration = new DesktopIntegration(log_service);
             settings_store.ensure_plugins_dir_seeded(log_service);
             monitor_manager = new MonitorManager(log_service);
             plugin_runner = new PluginRunner(log_service, variables_store, settings_store);
             xbar_parser = new XbarParser();
-            plugin_manager = new PluginManager(settings_store, plugin_runner, xbar_parser, log_service);
+            plugin_manager = new PluginManager(
+                settings_store,
+                variables_store,
+                plugin_runner,
+                xbar_parser,
+                log_service
+            );
             action_dispatcher = new ActionDispatcher(this, log_service);
             menu_builder = new MenuBuilder(action_dispatcher, plugin_manager, settings_store, desktop_integration);
             load_css();
