@@ -1,11 +1,20 @@
 namespace Sidewing {
     public class LogService : Object {
+        private Mutex write_mutex;
+
         public void info(string message) {
-            stdout.printf("[%s] [INFO] %s\n", timestamp(), message);
+            log("INFO", message);
         }
 
         public void warning(string message) {
-            stdout.printf("[%s] [WARN] %s\n", timestamp(), message);
+            log("WARN", message);
+        }
+
+        private void log(string level, string message) {
+            write_mutex.lock();
+            stdout.printf("[%s] [%s] %s\n", timestamp(), level, message);
+            stdout.flush();
+            write_mutex.unlock();
         }
 
         private string timestamp() {

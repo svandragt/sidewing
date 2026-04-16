@@ -58,3 +58,4 @@ Then run the app and exercise plugin discovery, menu rendering, and action dispa
 - README documents user-facing behavior; check it before changing plugin semantics.
 - Sidewing currently focuses on X11 placement. Do not assume Wayland support exists.
 - Example plugins in `examples/plugins/` are part of the product surface and useful for manual verification.
+- When debugging plugin shell commands, do not trust `zsh -lc` alone for `PATH`. User tools like `gh` may come from interactive shell setup in `.zshrc` or sourced files such as `shell.zsh`, so plugin PATH resolution may need to merge environment, login-shell, interactive-shell, and `.profile` sources.
