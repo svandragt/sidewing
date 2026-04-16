@@ -2,7 +2,7 @@
 
 # <xbar.title>Available Disk Space</xbar.title>
 # <xbar.version>1.0</xbar.version>
-# <xbar.author>staba</xbar.author>
+# <xbar.author>Sidewing</xbar.author>
 # <xbar.desc>Shows available disk space for the root filesystem.</xbar.desc>
 # <xbar.dependencies>df</xbar.dependencies>
 

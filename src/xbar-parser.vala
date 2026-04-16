@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class XbarParser : Object {
         public ParsedPluginState parse(string stdout_text) {
             var state = new ParsedPluginState();
@@ -24,7 +24,7 @@ namespace Staba {
                     state.menu_items.add(item);
                 } else {
                     state.bar_items.add(item);
-                    if (state.visible_title == "staba") {
+                    if (state.visible_title == "Sidewing") {
                         state.visible_title = item.title;
                     }
                 }

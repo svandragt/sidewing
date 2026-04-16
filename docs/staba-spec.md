@@ -1,10 +1,10 @@
-# staba Specification
+# Sidewing Specification
 
 Status: MVP frozen
 
 ## Summary
 
-`staba` is a Vala desktop application for elementary OS 8 that renders an xbar-compatible bar on a secondary monitor in the X11 "Classic Session".
+`Sidewing` is a Vala desktop application for elementary OS 8 that renders an xbar-compatible bar on a secondary monitor in the X11 "Classic Session".
 
 The product goal is simple:
 
@@ -13,7 +13,7 @@ The product goal is simple:
 - Render the primary line as a compact bar item on a chosen non-primary monitor.
 - Show the remaining lines in a plugin menu.
 
-Working title: `staba`
+Product name: `Sidewing`
 
 Tagline: Put the output from any script or program into your elementary OS bar.
 
@@ -21,7 +21,7 @@ Tagline: Put the output from any script or program into your elementary OS bar.
 
 Wingpanel is designed as the system top panel, but in practice users with multiple monitors may want a lightweight bar on a secondary monitor showing custom status, actions, and menus driven by scripts.
 
-`staba` fills that gap by providing:
+`Sidewing` fills that gap by providing:
 
 - A dedicated top-edge bar window on a selected secondary monitor.
 - Script-driven status items inspired by xbar.
@@ -65,11 +65,11 @@ Wingpanel is designed as the system top panel, but in practice users with multip
 ## User Stories
 
 - As a user, I can place a thin bar on a secondary monitor so it feels like that monitor has its own top status area.
-- As a user, I can point `staba` at a plugins directory and see compatible plugins appear without writing app-specific code.
+- As a user, I can point `Sidewing` at a plugins directory and see compatible plugins appear without writing app-specific code.
 - As a user, I can click a status item to open a plugin menu populated from plugin output.
 - As a user, I can trigger plugin-defined actions from menu items.
 - As a user, I can refresh one plugin or all plugins.
-- As a user, I can choose which monitor hosts the `staba` bar.
+- As a user, I can choose which monitor hosts the `Sidewing` bar.
 - As a user, I can disable plugins that are broken or noisy without deleting them.
 - As a user, I can copy or adapt bundled example plugins for common tasks like public IP, memory, disk space, and GitHub PR counts.
 - As a plugin author, I can reuse the xbar mental model and most of its output format.
@@ -78,7 +78,7 @@ Wingpanel is designed as the system top panel, but in practice users with multip
 
 ### 1. Bar
 
-`staba` owns a borderless, always-on-top window anchored to the top edge of one selected secondary monitor.
+`Sidewing` owns a borderless, always-on-top window anchored to the top edge of one selected secondary monitor.
 
 The bar:
 
@@ -99,7 +99,7 @@ Examples:
 - `cpu.5s.py`
 - `vpn.1m.rb`
 
-`staba` discovers plugins by scanning configured directories on startup and when manually refreshed.
+`Sidewing` discovers plugins by scanning configured directories on startup and when manually refreshed.
 
 ### 3. Item Model
 
@@ -108,7 +108,7 @@ Each plugin produces:
 - one or more bar lines
 - zero or more menu lines after a separator line `---`
 
-Internally, `staba` parses plugin stdout into a normalized item tree:
+Internally, `Sidewing` parses plugin stdout into a normalized item tree:
 
 - bar item lines
 - menu items
@@ -143,7 +143,7 @@ Recommended MVP layout:
 - Each plugin shows only its current bar title
 - Clicking a plugin opens a menu below the bar
 
-If a plugin emits multiple pre-`---` lines, `staba` should cycle them like xbar only if the implementation cost is reasonable. Otherwise, the first line is shown in MVP and cycling is deferred.
+If a plugin emits multiple pre-`---` lines, `Sidewing` should cycle them like xbar only if the implementation cost is reasonable. Otherwise, the first line is shown in MVP and cycling is deferred.
 
 ## Monitor Placement
 
@@ -194,7 +194,7 @@ Future settings:
 
 ## Bundled Example Plugins
 
-The project should include a small set of example plugins in-repo so users can test `staba` immediately and authors have Linux-oriented reference implementations.
+The project should include a small set of example plugins in-repo so users can test `Sidewing` immediately and authors have Linux-oriented reference implementations.
 
 Initial example set:
 
@@ -225,7 +225,7 @@ Recommended repo location:
 
 ## Compatibility Goal
 
-`staba` aims for "xbar text protocol compatibility", not "macOS behavior compatibility".
+`Sidewing` aims for "xbar text protocol compatibility", not "macOS behavior compatibility".
 
 That means:
 
@@ -262,11 +262,11 @@ A plugin must:
 - be executable
 - have a valid interpreter via shebang or be directly executable binary/script
 
-If a file is not executable, `staba` should mark it invalid and show the reason in logs/settings.
+If a file is not executable, `Sidewing` should mark it invalid and show the reason in logs/settings.
 
 ## Supported xbar Syntax
 
-`staba` MVP should support these xbar behaviors:
+`Sidewing` MVP should support these xbar behaviors:
 
 - plain text lines
 - `---` as menu separator boundary
@@ -300,7 +300,7 @@ Unsupported parameters must not crash parsing.
 
 ## Metadata Support
 
-`staba` should parse xbar metadata tags from comments near the top of plugin files:
+`Sidewing` should parse xbar metadata tags from comments near the top of plugin files:
 
 - `<xbar.title>`
 - `<xbar.version>`
@@ -321,7 +321,7 @@ MVP uses of metadata:
 
 ## Variables Support
 
-`staba` should support xbar-style variables metadata for user-configurable plugin settings.
+`Sidewing` should support xbar-style variables metadata for user-configurable plugin settings.
 
 Supported variable types:
 
@@ -374,7 +374,7 @@ Each plugin process receives:
 Optional compatibility env vars:
 
 - `XBAR=1` for plugins that only check for xbar-like execution
-- `XBARDarkMode=true|false` equivalent if `staba` tracks current appearance
+- `XBARDarkMode=true|false` equivalent if `Sidewing` tracks current appearance
 
 This is an intentional compatibility shim.
 
@@ -481,7 +481,7 @@ These are intentional divergences from xbar/macOS:
 
 ## Security Model
 
-`staba` executes arbitrary local plugins as the current user.
+`Sidewing` executes arbitrary local plugins as the current user.
 
 Therefore:
 
@@ -492,24 +492,24 @@ Therefore:
 
 Recommended default path:
 
-- `~/.local/share/staba/plugins`
+- `~/.local/share/sidewing/plugins`
 
 Recommended config path:
 
-- `~/.config/staba/`
+- `~/.config/sidewing/`
 
 ## Storage Layout
 
 Recommended layout:
 
-- `~/.config/staba/config.json`
-- `~/.config/staba/state.json`
-- `~/.cache/staba/` for transient runtime data
-- `~/.local/share/staba/plugins/` for user plugins
+- `~/.config/sidewing/config.json`
+- `~/.config/sidewing/state.json`
+- `~/.cache/sidewing/` for transient runtime data
+- `~/.local/share/sidewing/plugins/` for user plugins
 
 Optional later:
 
-- `~/.local/share/staba/plugins-disabled/`
+- `~/.local/share/sidewing/plugins-disabled/`
 
 ## Architecture
 
@@ -589,7 +589,7 @@ At minimum, log:
 
 Recommended log destination:
 
-- file under `~/.cache/staba/`
+- file under `~/.cache/sidewing/`
 - optional in-app viewer in settings/about window
 
 ## MVP Scope
@@ -634,12 +634,12 @@ The MVP should include:
 
 ## Resolved MVP Decisions
 
-- `staba` shows one visible bar title per plugin in MVP.
+- `Sidewing` shows one visible bar title per plugin in MVP.
 - If a plugin emits multiple pre-`---` lines, the first line is used as the visible title in MVP.
 - `alternate=true` is deferred and may be parsed as a no-op.
 - `terminal=true` is deferred; Linux terminal launching is not part of the MVP contract.
 - Invalid or non-executable plugins are ignored by the runtime and surfaced through logs/error UI rather than shown in the bar.
-- If monitor hotplug invalidates the stored target, `staba` may move automatically to the next best monitor based on the existing fallback rules.
+- If monitor hotplug invalidates the stored target, `Sidewing` may move automatically to the next best monitor based on the existing fallback rules.
 
 ## Recommended Decisions for Initial Build
 
@@ -659,7 +659,7 @@ The MVP should include:
 
 ## Acceptance Criteria
 
-`staba` MVP is successful when:
+`Sidewing` MVP is successful when:
 
 - A user can place an executable plugin in the plugins directory and see it appear after refresh.
 - A valid plugin like `date.1m.sh` renders output in the bar.
@@ -673,4 +673,4 @@ The MVP should include:
 
 ## Short Positioning Statement
 
-`staba` is "xbar for a secondary monitor on elementary OS Classic Session": a small Vala app that runs local plugins and renders their output as a scriptable bar on X11.
+`Sidewing` is "xbar for a secondary monitor on elementary OS Classic Session": a small Vala app that runs local plugins and renders their output as a scriptable bar on X11.

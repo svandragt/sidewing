@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class VariablesStore : Object {
         public VariablesStore() {
         }

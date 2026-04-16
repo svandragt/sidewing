@@ -1,6 +1,6 @@
 # Example Plugins
 
-These example plugins are intended to ship with `staba` as Linux-friendly references for common status items.
+These example plugins are intended to ship with `Sidewing` as Linux-friendly references for common status items.
 
 Included examples:
 

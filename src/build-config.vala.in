@@ -1,3 +1,3 @@
-namespace Staba.Build {
+namespace Sidewing.Build {
     public const string PROJECT_SOURCE_ROOT = @PROJECT_SOURCE_ROOT@;
 }

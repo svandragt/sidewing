@@ -28,7 +28,7 @@ staba_sources += files(
 )
 
 executable(
-  'staba',
+  'sidewing',
   staba_sources,
   dependencies: [
     gtk_dep,

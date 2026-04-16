@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public enum ParsedItemKind {
         BAR_LINE,
         MENU_ITEM,
@@ -99,7 +99,7 @@ namespace Staba {
     }
 
     public class ParsedPluginState : Object {
-        public string visible_title { get; set; default = "staba"; }
+        public string visible_title { get; set; default = "Sidewing"; }
         public Gee.ArrayList<ParsedItem> bar_items { get; private set; }
         public Gee.ArrayList<ParsedItem> menu_items { get; private set; }
         public Gee.ArrayList<string> warnings { get; private set; }

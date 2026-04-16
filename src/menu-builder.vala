@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class MenuBuilder : Object {
         private ActionDispatcher action_dispatcher;
         private PluginManager plugin_manager;
@@ -30,7 +30,7 @@ namespace Staba {
             box.margin_end = 12;
             box.margin_top = 12;
             box.margin_bottom = 12;
-            box.add_css_class("staba-menu");
+            box.add_css_class("sidewing-menu");
 
             var heading = new Gtk.Label(record.definition.display_name);
             heading.halign = Gtk.Align.START;
@@ -73,7 +73,7 @@ namespace Staba {
             button.halign = Gtk.Align.FILL;
             button.hexpand = true;
             button.add_css_class("flat");
-            button.add_css_class("staba-menu-item");
+            button.add_css_class("sidewing-menu-item");
             button.set_can_focus(false);
 
             if (item.depth > 0) {

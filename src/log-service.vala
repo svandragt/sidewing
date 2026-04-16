@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class LogService : Object {
         public void info(string message) {
             stdout.printf("[%s] [INFO] %s\n", timestamp(), message);

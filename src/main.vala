@@ -1,4 +1,4 @@
 int main(string[] args) {
-    var app = new Staba.Application();
+    var app = new Sidewing.Application();
     return app.run(args);
 }

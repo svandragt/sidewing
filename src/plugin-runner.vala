@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class PluginRunner : Object {
         private LogService log_service;
         private VariablesStore variables_store;

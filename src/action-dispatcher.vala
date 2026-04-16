@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class ActionDispatcher : Object {
         private Gtk.Application application;
         private LogService log_service;

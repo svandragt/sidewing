@@ -1,8 +1,8 @@
-# staba Implementation Plan
+# Sidewing Implementation Plan
 
 ## Objective
 
-Build `staba` as a standalone Vala application for elementary OS 8 Classic Session on X11 that renders xbar-compatible plugin output in a bar on a secondary monitor.
+Build `Sidewing` as a standalone Vala application for elementary OS 8 Classic Session on X11 that renders xbar-compatible plugin output in a bar on a secondary monitor.
 
 This plan turns the product spec into a sequence of implementation phases with clear module ownership and MVP boundaries.
 
@@ -38,7 +38,7 @@ Goal:
 Deliverables:
 
 - Meson build files
-- `Staba.Application` entry point
+- `Sidewing.Application` entry point
 - source tree for core modules
 - placeholder runtime wiring
 
@@ -59,7 +59,7 @@ Modules:
 
 Implementation:
 
-- define config/state file paths under `~/.config/staba/`
+- define config/state file paths under `~/.config/sidewing/`
 - define a monitor model with stable identifiers, geometry, and primary flag
 - enumerate monitors via GDK
 - persist selected monitor

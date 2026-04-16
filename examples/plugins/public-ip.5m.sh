@@ -2,7 +2,7 @@
 
 # <xbar.title>Public IP</xbar.title>
 # <xbar.version>1.0</xbar.version>
-# <xbar.author>staba</xbar.author>
+# <xbar.author>Sidewing</xbar.author>
 # <xbar.desc>Shows the current public IPv4 or IPv6 address.</xbar.desc>
 # <xbar.dependencies>curl</xbar.dependencies>
 

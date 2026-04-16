@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class SettingsStore : Object {
         public string config_dir { get; private set; }
         public string config_path { get; private set; }
@@ -8,9 +8,9 @@ namespace Staba {
         public int bar_height { get; set; default = 32; }
 
         public SettingsStore() {
-            config_dir = Path.build_filename(Environment.get_user_config_dir(), "staba");
+            config_dir = Path.build_filename(Environment.get_user_config_dir(), "sidewing");
             config_path = Path.build_filename(config_dir, "config.ini");
-            data_dir = Path.build_filename(Environment.get_user_data_dir(), "staba");
+            data_dir = Path.build_filename(Environment.get_user_data_dir(), "sidewing");
             plugins_dir = Path.build_filename(data_dir, "plugins");
             selected_monitor_id = null;
             load();

@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class Application : Gtk.Application {
         private SettingsStore settings_store;
         private VariablesStore variables_store;
@@ -13,7 +13,7 @@ namespace Staba {
 
         public Application() {
             Object(
-                application_id: "io.elementary.staba",
+                application_id: "com.vandragt.sidewing",
                 flags: ApplicationFlags.DEFAULT_FLAGS
             );
         }
@@ -56,35 +56,35 @@ namespace Staba {
             menu_builder = new MenuBuilder(action_dispatcher, plugin_manager);
             load_css();
 
-            log_service.info("staba initialized");
+            log_service.info("Sidewing initialized");
         }
 
         private void load_css() {
             var provider = new Gtk.CssProvider();
             provider.load_from_string("""
-                window.staba-window {
+                window.sidewing-window {
                     background: rgba(28, 30, 34, 0.94);
                     color: rgba(255, 255, 255, 0.94);
                 }
 
-                .staba-bar {
+                .sidewing-bar {
                     min-height: 28px;
                     padding: 0;
                     background: rgba(28, 30, 34, 0.94);
                     color: #d7dae0;
                 }
 
-                .staba-bar,
-                .staba-bar label,
-                .staba-bar button,
-                .staba-bar button label,
-                .staba-bar menubutton,
-                .staba-bar menubutton label,
-                .staba-bar image {
+                .sidewing-bar,
+                .sidewing-bar label,
+                .sidewing-bar button,
+                .sidewing-bar button label,
+                .sidewing-bar menubutton,
+                .sidewing-bar menubutton label,
+                .sidewing-bar image {
                     color: #d7dae0;
                 }
 
-                .staba-item {
+                .sidewing-item {
                     min-height: 24px;
                     padding: 0 8px;
                     margin: 0 1px;
@@ -95,38 +95,38 @@ namespace Staba {
                     background: transparent;
                 }
 
-                .staba-item label {
+                .sidewing-item label {
                     color: #d7dae0;
                 }
 
-                .staba-item-label {
+                .sidewing-item-label {
                     color: #d7dae0;
                 }
 
-                .staba-item:hover {
+                .sidewing-item:hover {
                     background: rgba(255, 255, 255, 0.10);
                     color: #f2f4f8;
                 }
 
-                .staba-item:hover label {
+                .sidewing-item:hover label {
                     color: #f2f4f8;
                 }
 
                 popover contents,
-                .staba-menu {
+                .sidewing-menu {
                     background: rgba(33, 35, 40, 0.98);
                     color: rgba(255, 255, 255, 0.94);
                     border-radius: 10px;
                 }
 
-                .staba-menu-item {
+                .sidewing-menu-item {
                     min-height: 26px;
                     padding: 4px 8px;
                     border-radius: 6px;
                     color: rgba(255, 255, 255, 0.94);
                 }
 
-                .staba-menu-item:hover {
+                .sidewing-menu-item:hover {
                     background: rgba(255, 255, 255, 0.10);
                 }
 

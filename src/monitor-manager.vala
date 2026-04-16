@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class MonitorManager : Object {
         private LogService log_service;
 

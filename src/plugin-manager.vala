@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class PluginManager : Object {
         private SettingsStore settings_store;
         private PluginRunner plugin_runner;
@@ -147,7 +147,7 @@ namespace Staba {
         private void apply_run_result(PluginRecord record, PluginRunResult result) {
             var state = xbar_parser.parse(result.stdout_text);
 
-            if (state.visible_title == "staba" || state.visible_title == "") {
+            if (state.visible_title == "Sidewing" || state.visible_title == "") {
                 state.visible_title = record.definition.display_name;
             }
 

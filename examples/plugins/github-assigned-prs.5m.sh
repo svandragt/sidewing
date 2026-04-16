@@ -2,7 +2,7 @@
 
 # <xbar.title>Assigned GitHub PRs</xbar.title>
 # <xbar.version>1.0</xbar.version>
-# <xbar.author>staba</xbar.author>
+# <xbar.author>Sidewing</xbar.author>
 # <xbar.desc>Shows the number of open pull requests assigned to the authenticated GitHub user.</xbar.desc>
 # <xbar.dependencies>gh</xbar.dependencies>
 

@@ -1,4 +1,4 @@
-namespace Staba {
+namespace Sidewing {
     public class BarWindow : Gtk.ApplicationWindow {
         private SettingsStore settings_store;
         private MonitorManager monitor_manager;
@@ -17,7 +17,7 @@ namespace Staba {
             PluginManager plugin_manager,
             LogService log_service
         ) {
-            Object(application: app, title: "staba");
+            Object(application: app, title: "Sidewing");
 
             this.settings_store = settings_store;
             this.monitor_manager = monitor_manager;
@@ -29,7 +29,7 @@ namespace Staba {
             resizable = false;
             default_height = settings_store.bar_height;
             default_width = 800;
-            add_css_class("staba-window");
+            add_css_class("sidewing-window");
 
             items_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 6);
             items_box.margin_start = 12;
@@ -40,7 +40,7 @@ namespace Staba {
             buttons_by_plugin_path = new Gee.HashMap<string, Gtk.MenuButton>();
 
             var frame = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
-            frame.add_css_class("staba-bar");
+            frame.add_css_class("sidewing-bar");
             frame.append(items_box);
 
             set_child(frame);
@@ -112,20 +112,20 @@ namespace Staba {
         private void append_plugin_chip(PluginRecord record) {
             var button = new Gtk.MenuButton();
             string label = record.state.visible_title;
-            if (label == "staba" || label == "") {
+            if (label == "Sidewing" || label == "") {
                 label = record.definition.display_name;
             }
 
             button.valign = Gtk.Align.CENTER;
             button.add_css_class("flat");
-            button.add_css_class("staba-item");
+            button.add_css_class("sidewing-item");
             button.set_has_frame(false);
             button.set_always_show_arrow(false);
             button.set_direction(Gtk.ArrowType.NONE);
             button.set_popover(menu_builder.build_plugin_menu(record));
 
             var title = new Gtk.Label(label);
-            title.add_css_class("staba-item-label");
+            title.add_css_class("sidewing-item-label");
             title.ellipsize = Pango.EllipsizeMode.END;
             button.set_child(title);
 
@@ -144,7 +144,7 @@ namespace Staba {
         private void append_message_chip(string title) {
             var label = new Gtk.Label(title);
             label.halign = Gtk.Align.START;
-            label.add_css_class("staba-item");
+            label.add_css_class("sidewing-item");
             items_box.append(label);
         }
 
@@ -218,7 +218,7 @@ namespace Staba {
             }
 
             string label = record.state.visible_title;
-            if (label == "staba" || label == "") {
+            if (label == "Sidewing" || label == "") {
                 label = record.definition.display_name;
             }
 

@@ -2,7 +2,7 @@
 
 # <xbar.title>Available Memory</xbar.title>
 # <xbar.version>1.0</xbar.version>
-# <xbar.author>staba</xbar.author>
+# <xbar.author>Sidewing</xbar.author>
 # <xbar.desc>Shows available system memory from /proc/meminfo.</xbar.desc>
 # <xbar.dependencies>awk</xbar.dependencies>
 
