@@ -1,6 +1,6 @@
 # Sidewing
 
-Sidewing is a GTK4 desktop bar for elementary OS-style multi-monitor setups. It runs local executable plugins, parses xbar-style output, and renders the result in a slim bar window on a selected display.
+Sidewing is a GTK4 desktop bar for elementary OS-style multi-monitor setups. It runs local executable plugins, parses [xbar-style](https://github.com/matryer/xbar) output, and renders the result in a slim bar window on a selected display.
 
 Current target:
 
