@@ -7,11 +7,11 @@ build_config = configure_file(
   configuration: config,
 )
 
-staba_sources = [
+sidewing_sources = [
   build_config,
 ]
 
-staba_sources += files(
+sidewing_sources += files(
   'main.vala',
   'application.vala',
   'models.vala',
@@ -29,7 +29,7 @@ staba_sources += files(
 
 executable(
   'sidewing',
-  staba_sources,
+  sidewing_sources,
   dependencies: [
     gtk_dep,
     gtk4_x11_dep,

@@ -365,10 +365,10 @@ Each plugin process receives:
 
 - inherited user environment
 - configured plugin variables
-- `STABA=1`
-- `STABA_PLUGIN_PATH=/absolute/path/to/plugin`
-- `STABA_PLUGIN_DIR=/absolute/path/to/plugins/dir`
-- `STABA_MONITOR_NAME=<display name if known>`
+- `SIDEWING=1`
+- `SIDEWING_PLUGIN_PATH=/absolute/path/to/plugin`
+- `SIDEWING_PLUGIN_DIR=/absolute/path/to/plugins/dir`
+- `SIDEWING_MONITOR_NAME=<display name if known>`
 - `XDG_CURRENT_DESKTOP=Pantheon` if already present in session
 
 Optional compatibility env vars:

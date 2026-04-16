@@ -18,10 +18,10 @@ namespace Sidewing {
                 string plugin_dir = Path.get_dirname(plugin.path);
 
                 launcher.set_cwd(plugin_dir);
-                launcher.setenv("STABA", "1", true);
+                launcher.setenv("SIDEWING", "1", true);
                 launcher.setenv("XBAR", "1", true);
-                launcher.setenv("STABA_PLUGIN_PATH", plugin.path, true);
-                launcher.setenv("STABA_PLUGIN_DIR", settings_store.plugins_dir, true);
+                launcher.setenv("SIDEWING_PLUGIN_PATH", plugin.path, true);
+                launcher.setenv("SIDEWING_PLUGIN_DIR", settings_store.plugins_dir, true);
                 variables_store.apply_to_launcher(launcher, plugin);
 
                 string[] argv = { plugin.path, null };

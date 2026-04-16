@@ -135,10 +135,12 @@ Currently recognized metadata:
 
 Environment variables set for plugins:
 
-- `STABA=1`
+- `SIDEWING=1`
 - `XBAR=1`
-- `STABA_PLUGIN_PATH`
-- `STABA_PLUGIN_DIR`
+- `SIDEWING_PLUGIN_PATH`
+- `SIDEWING_PLUGIN_DIR`
+
+This renamed the older `STABA_*` variables. Existing plugins that read those names need to be updated.
 
 Plugins run with their own directory as the current working directory.
 
@@ -174,8 +176,6 @@ docs/
 
 Related design and planning docs:
 
-- [`docs/staba-spec.md`](./docs/staba-spec.md)
+- [`docs/sidewing-spec.md`](./docs/sidewing-spec.md)
 - [`docs/implementation-plan.md`](./docs/implementation-plan.md)
 - [`docs/TODO.md`](./docs/TODO.md)
-
-Note that some docs still use the older internal name `staba`.
