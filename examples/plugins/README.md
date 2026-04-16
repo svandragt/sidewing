@@ -1,0 +1,26 @@
+# Example Plugins
+
+These example plugins are intended to ship with `staba` as Linux-friendly references for common status items.
+
+Included examples:
+
+- [public-ip.5m.sh](./public-ip.5m.sh)
+- [available-memory.10s.sh](./available-memory.10s.sh)
+- [available-disk-space.1m.sh](./available-disk-space.1m.sh)
+- [github-assigned-prs.5m.sh](./github-assigned-prs.5m.sh)
+
+Notes:
+
+- They are written for Linux and avoid macOS-specific commands.
+- The GitHub example requires the `gh` CLI and an authenticated session.
+- The public IP example uses `https://api.ipify.org`; network failure is handled as a normal plugin error state.
+
+To try them manually:
+
+```sh
+chmod +x examples/plugins/*.sh
+./examples/plugins/public-ip.5m.sh
+./examples/plugins/available-memory.10s.sh
+./examples/plugins/available-disk-space.1m.sh
+./examples/plugins/github-assigned-prs.5m.sh
+```
