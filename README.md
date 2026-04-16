@@ -10,6 +10,9 @@ Current target:
 
 The current codebase is an MVP-in-progress. It already discovers and runs plugins, schedules refreshes from xbar-style filenames, renders a bar window, and opens plugin menus. Several planned features are still not implemented yet.
 
+<img width="531" height="257" alt="image" src="https://github.com/user-attachments/assets/430e3cce-cd05-4bf9-ada2-eced9fa48f63" />
+
+
 ## What It Does
 
 - Scans a plugins directory for executable files with xbar-style refresh intervals such as `clock.5s.sh` or `disk.1m.py`
