@@ -30,7 +30,6 @@ The implementation is narrower than the long-term spec.
 
 - X11 placement is implemented; Wayland support is not
 - There is no full settings UI yet
-- There is no installed desktop file or autostart integration yet
 - `terminal=true` command launching is not implemented yet; command actions currently run without a terminal
 - Unsupported xbar metadata is ignored
 - Only the first bar line is shown as the visible title
@@ -75,10 +74,17 @@ meson compile -C build
 The app stores its state under:
 
 - Config: `~/.config/sidewing/config.ini`
+- Autostart entry: `~/.config/autostart/com.vandragt.sidewing.desktop`
 - User data: `~/.local/share/sidewing/`
+- Desktop entry: `~/.local/share/applications/com.vandragt.sidewing.desktop`
 - Plugins directory: `~/.local/share/sidewing/plugins/`
 
 On first launch, `Sidewing` copies the example plugins from [`examples/plugins`](./examples/plugins/) into the user plugins directory if that directory is empty.
+
+From the bar app menu you can:
+
+- install a user desktop entry
+- enable or disable autostart for the current user session
 
 ## Plugin Naming
 

@@ -183,6 +183,7 @@ MVP settings:
 - autostart on login
 - refresh all
 - open plugins folder
+- install desktop entry
 - show logs / plugin errors
 
 Future settings:
@@ -191,6 +192,12 @@ Future settings:
 - padding and spacing
 - item alignment zones
 - bar exclusivity / strut reservation on X11
+
+Current MVP delivery note:
+
+- The app menu currently exposes user-level desktop integration actions rather than a full settings window.
+- Desktop entry installation writes `com.vandragt.sidewing.desktop` under `~/.local/share/applications/`.
+- Autostart toggling writes the corresponding XDG autostart entry under `~/.config/autostart/`.
 
 ## Bundled Example Plugins
 

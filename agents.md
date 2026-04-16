@@ -21,6 +21,7 @@ The codebase is still an MVP.
 - `src/menu-builder.vala`: GTK menu construction from parsed items
 - `src/action-dispatcher.vala`: menu action handling
 - `src/models.vala`: shared data models
+- `src/desktop-integration.vala`: user desktop entry and autostart integration
 - `examples/plugins/`: bundled example plugins
 - `docs/sidewing-spec.md`: broader behavior/spec reference
 - `docs/implementation-plan.md`: planned architecture/work

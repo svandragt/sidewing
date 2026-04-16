@@ -186,18 +186,20 @@ Exit criteria:
 
 Goal:
 
-- improve panel behavior and package the app for local testing
+- improve panel behavior and packaging for local daily use
 
 Modules:
 
 - `BarWindow`
+- `DesktopIntegration`
 - packaging files
 
 Implementation:
 
 - investigate dock window hints and struts under Gala
-- add desktop file and app metadata
-- add autostart integration
+- write a user desktop entry under `~/.local/share/applications/`
+- write and remove an XDG autostart entry under `~/.config/autostart/`
+- expose desktop-entry install and autostart toggle actions from the app menu
 
 Exit criteria:
 

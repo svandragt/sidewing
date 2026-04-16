@@ -22,6 +22,7 @@ sidewing_sources += files(
   'xbar-parser.vala',
   'menu-builder.vala',
   'settings-store.vala',
+  'desktop-integration.vala',
   'variables-store.vala',
   'action-dispatcher.vala',
   'log-service.vala',

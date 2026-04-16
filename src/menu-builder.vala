@@ -3,15 +3,18 @@ namespace Sidewing {
         private ActionDispatcher action_dispatcher;
         private PluginManager plugin_manager;
         private SettingsStore settings_store;
+        private DesktopIntegration desktop_integration;
 
         public MenuBuilder(
             ActionDispatcher action_dispatcher,
             PluginManager plugin_manager,
-            SettingsStore settings_store
+            SettingsStore settings_store,
+            DesktopIntegration desktop_integration
         ) {
             this.action_dispatcher = action_dispatcher;
             this.plugin_manager = plugin_manager;
             this.settings_store = settings_store;
+            this.desktop_integration = desktop_integration;
         }
 
         public Gtk.Widget build_plugin_menu(PluginRecord record) {
@@ -103,6 +106,38 @@ namespace Sidewing {
                 action_dispatcher.open_directory(settings_store.plugins_dir);
             });
             box.append(open_plugins_button);
+
+            var install_desktop_button = new Gtk.Button.with_label("Install Desktop Entry");
+            install_desktop_button.halign = Gtk.Align.FILL;
+            install_desktop_button.hexpand = true;
+            install_desktop_button.add_css_class("flat");
+            install_desktop_button.add_css_class("sidewing-menu-item");
+            install_desktop_button.set_can_focus(false);
+            install_desktop_button.clicked.connect(() => {
+                desktop_integration.install_desktop_entry();
+                populate_app_menu(popover);
+            });
+            box.append(install_desktop_button);
+
+            string autostart_label = desktop_integration.is_autostart_enabled()
+                ? "Disable Autostart"
+                : "Enable Autostart";
+            var autostart_button = new Gtk.Button.with_label(autostart_label);
+            autostart_button.halign = Gtk.Align.FILL;
+            autostart_button.hexpand = true;
+            autostart_button.add_css_class("flat");
+            autostart_button.add_css_class("sidewing-menu-item");
+            autostart_button.set_can_focus(false);
+            autostart_button.clicked.connect(() => {
+                if (desktop_integration.is_autostart_enabled()) {
+                    desktop_integration.disable_autostart();
+                } else {
+                    desktop_integration.enable_autostart();
+                }
+
+                populate_app_menu(popover);
+            });
+            box.append(autostart_button);
 
             var refresh_all_button = new Gtk.Button.with_label("Refresh All");
             refresh_all_button.halign = Gtk.Align.FILL;
