@@ -141,10 +141,25 @@ namespace Sidewing {
             }
 
             button.clicked.connect(() => {
-                if (item.refresh) {
-                    plugin_manager.refresh_record(record);
+                if (item.shell_command != null && item.shell_command != "") {
+                    action_dispatcher.execute_command(
+                        item.shell_command,
+                        item.shell_params,
+                        Path.get_dirname(record.definition.path),
+                        item.terminal,
+                        () => {
+                            if (item.refresh) {
+                                plugin_manager.refresh_record(record);
+                            }
+                        }
+                    );
                 } else if (item.href != null) {
                     action_dispatcher.open_uri(item.href);
+                    if (item.refresh) {
+                        plugin_manager.refresh_record(record);
+                    }
+                } else if (item.refresh) {
+                    plugin_manager.refresh_record(record);
                 }
             });
 

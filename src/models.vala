@@ -85,6 +85,9 @@ namespace Sidewing {
         public uint depth { get; construct set; }
         public bool refresh { get; construct set; }
         public string? href { get; construct set; }
+        public string? shell_command { get; construct set; }
+        public Gee.ArrayList<string> shell_params { get; construct set; }
+        public bool terminal { get; construct set; }
         public bool disabled { get; construct set; }
 
         public ParsedItem(
@@ -93,6 +96,9 @@ namespace Sidewing {
             uint depth = 0,
             bool refresh = false,
             string? href = null,
+            string? shell_command = null,
+            Gee.ArrayList<string>? shell_params = null,
+            bool terminal = false,
             bool disabled = false
         ) {
             Object(
@@ -101,6 +107,9 @@ namespace Sidewing {
                 depth: depth,
                 refresh: refresh,
                 href: href,
+                shell_command: shell_command,
+                shell_params: shell_params ?? new Gee.ArrayList<string>(),
+                terminal: terminal,
                 disabled: disabled
             );
         }

@@ -19,7 +19,7 @@ The current codebase is an MVP-in-progress. It already discovers and runs plugin
 - Runs each plugin on its own refresh schedule
 - Uses the first pre-`---` line as the visible bar label
 - Uses lines after `---` as menu items
-- Supports menu separators, disabled items, basic nested indentation, `href=...`, and `refresh=true`
+- Supports menu separators, disabled items, basic nested indentation, `href=...`, `shell=...`, `paramN=...`, and `refresh=true`
 - Adds a right-aligned app menu with plugin-folder and refresh-all actions
 - Seeds the user plugin directory with bundled example plugins on first launch
 - Prefers a non-primary monitor and falls back to the primary monitor if needed
@@ -31,7 +31,7 @@ The implementation is narrower than the long-term spec.
 - X11 placement is implemented; Wayland support is not
 - There is no full settings UI yet
 - There is no installed desktop file or autostart integration yet
-- Plugin actions currently support opening URLs and triggering refreshes, but not `shell=` / `paramN=` execution
+- `terminal=true` command launching is not implemented yet; command actions currently run without a terminal
 - Unsupported xbar metadata is ignored
 - Only the first bar line is shown as the visible title
 - Plugin variables are stubbed out and not yet user-configurable
@@ -127,6 +127,9 @@ Current behavior:
 Currently recognized metadata:
 
 - `href="..."`
+- `shell="..."`
+- `param1="..."`, `param2="..."`, ...
+- `terminal=true`
 - `refresh=true`
 - `disabled=true`
 
@@ -143,6 +146,7 @@ Plugins run with their own directory as the current working directory.
 
 Bundled examples live in [`examples/plugins`](./examples/plugins/):
 
+- [`action-demo.30s.sh`](./examples/plugins/action-demo.30s.sh)
 - [`available-memory.10s.sh`](./examples/plugins/available-memory.10s.sh)
 - [`available-disk-space.1m.sh`](./examples/plugins/available-disk-space.1m.sh)
 - [`public-ip.5m.sh`](./examples/plugins/public-ip.5m.sh)
