@@ -4,6 +4,10 @@ namespace Staba {
         private PluginRunner plugin_runner;
         private XbarParser xbar_parser;
         private LogService log_service;
+        private Gee.ArrayList<PluginRecord> plugin_records;
+
+        public signal void plugins_changed();
+        public signal void plugin_updated(PluginRecord record);
 
         public PluginManager(
             SettingsStore settings_store,
@@ -15,10 +19,59 @@ namespace Staba {
             this.plugin_runner = plugin_runner;
             this.xbar_parser = xbar_parser;
             this.log_service = log_service;
+            plugin_records = new Gee.ArrayList<PluginRecord>();
         }
 
-        public Gee.ArrayList<PluginDefinition> discover_plugins() {
-            var plugins = new Gee.ArrayList<PluginDefinition>();
+        public Gee.ArrayList<PluginRecord> get_records() {
+            return plugin_records;
+        }
+
+        public void start() {
+            stop();
+            discover_plugins();
+            refresh_all();
+            plugins_changed();
+            schedule_refreshes();
+        }
+
+        public void stop() {
+            foreach (var record in plugin_records) {
+                if (record.refresh_source_id != 0) {
+                    Source.remove(record.refresh_source_id);
+                    record.refresh_source_id = 0;
+                }
+            }
+        }
+
+        public void refresh_all() {
+            foreach (var record in plugin_records) {
+                refresh_record(record);
+            }
+        }
+
+        public void refresh_record(PluginRecord record) {
+            var result = plugin_runner.run(record.definition);
+            var state = xbar_parser.parse(result.stdout_text);
+
+            if (state.visible_title == "staba" || state.visible_title == "") {
+                state.visible_title = record.definition.display_name;
+            }
+
+            state.stderr_text = result.stderr_text;
+            if (result.exit_code != 0) {
+                state.warnings.add(@"Plugin exited with status $(result.exit_code)");
+            }
+
+            if (result.stderr_text != "") {
+                state.warnings.add(result.stderr_text.strip());
+            }
+
+            record.state = state;
+            plugin_updated(record);
+        }
+
+        private void discover_plugins() {
+            plugin_records.clear();
             var directory = File.new_for_path(settings_store.plugins_dir);
 
             try {
@@ -36,24 +89,59 @@ namespace Staba {
                     }
 
                     string filename = info.get_name();
+                    if (!is_executable(info)) {
+                        continue;
+                    }
+
                     uint refresh_seconds = parse_refresh_seconds(filename);
                     if (refresh_seconds == 0) {
                         continue;
                     }
 
                     var child = directory.get_child(filename);
-                    plugins.add(new PluginDefinition(
+                    var definition = new PluginDefinition(
                         child.get_path(),
                         filename,
-                        filename,
+                        build_display_name(filename),
                         refresh_seconds
-                    ));
+                    );
+                    plugin_records.add(new PluginRecord(definition));
                 }
             } catch (Error err) {
                 log_service.warning(@"Plugin discovery failed: $(err.message)");
             }
 
-            return plugins;
+            plugin_records.sort((a, b) => {
+                return strcmp(a.definition.filename, b.definition.filename);
+            });
+        }
+
+        private void schedule_refreshes() {
+            foreach (var record in plugin_records) {
+                record.refresh_source_id = Timeout.add_seconds(record.definition.refresh_seconds, () => {
+                    refresh_record(record);
+                    return Source.CONTINUE;
+                });
+            }
+        }
+
+        private bool is_executable(FileInfo info) {
+            uint32 mode = info.get_attribute_uint32(FileAttribute.UNIX_MODE);
+            return (mode & 0111) != 0;
+        }
+
+        private string build_display_name(string filename) {
+            try {
+                var regex = new Regex("""^(.*)\.[0-9]+[smhd]\.[^.]+$""");
+                MatchInfo info;
+                if (regex.match(filename, 0, out info)) {
+                    return info.fetch(1);
+                }
+            } catch (Error err) {
+                log_service.warning(@"Failed to build display name for $(filename): $(err.message)");
+            }
+
+            return filename;
         }
 
         private uint parse_refresh_seconds(string filename) {

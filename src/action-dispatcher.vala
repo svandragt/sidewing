@@ -9,7 +9,12 @@ namespace Staba {
         }
 
         public void open_uri(string uri) {
-            log_service.info(@"Requested URI open: $uri");
+            try {
+                AppInfo.launch_default_for_uri(uri, null);
+                log_service.info(@"Opened URI: $uri");
+            } catch (Error err) {
+                log_service.warning(@"Failed to open URI $uri: $(err.message)");
+            }
         }
     }
 }

@@ -16,6 +16,8 @@ namespace Staba {
             }
 
             var total = display.get_monitors().get_n_items();
+            int primary_candidate_index = get_primary_candidate_index(display);
+
             for (uint i = 0; i < total; i++) {
                 var object = display.get_monitors().get_item(i);
                 var monitor = object as Gdk.Monitor;
@@ -24,15 +26,17 @@ namespace Staba {
                 }
 
                 Gdk.Rectangle geometry = monitor.get_geometry();
+                string? connector = monitor.get_connector();
+                string? description = monitor.get_description();
+                bool primary = ((int) i == primary_candidate_index);
+                string label = connector != null ? connector : (
+                    description != null ? description : @"Monitor $(i + 1)"
+                );
 
-                // GTK4 does not expose a primary-monitor getter here, so the first
-                // reported monitor is used as the default primary candidate.
-                bool primary = (i == 0);
-                string connector = monitor.get_connector();
-                string label = connector != null ? connector : @"Monitor $(i + 1)";
                 monitors.add(new MonitorInfo(
-                    @"monitor-$(i)",
+                    build_monitor_id(connector, description, geometry, i),
                     label,
+                    connector,
                     geometry.x,
                     geometry.y,
                     geometry.width,
@@ -49,7 +53,7 @@ namespace Staba {
 
             if (configured_id != null) {
                 foreach (var monitor in monitors) {
-                    if (monitor.id == configured_id) {
+                    if (monitor_matches_id(monitor, configured_id)) {
                         return monitor;
                     }
                 }
@@ -62,6 +66,70 @@ namespace Staba {
             }
 
             return monitors.size > 0 ? monitors[0] : null;
+        }
+
+        private int get_primary_candidate_index(Gdk.Display display) {
+            var x11_display = display as Gdk.X11.Display;
+            if (x11_display != null) {
+                var primary_monitor = x11_display.get_primary_monitor();
+                var total = display.get_monitors().get_n_items();
+                for (uint i = 0; i < total; i++) {
+                    var object = display.get_monitors().get_item(i);
+                    var monitor = object as Gdk.Monitor;
+                    if (monitor == primary_monitor) {
+                        return (int) i;
+                    }
+                }
+            }
+
+            int selected_index = 0;
+            int smallest_distance = int.MAX;
+            var total = display.get_monitors().get_n_items();
+
+            for (uint i = 0; i < total; i++) {
+                var object = display.get_monitors().get_item(i);
+                var monitor = object as Gdk.Monitor;
+                if (monitor == null) {
+                    continue;
+                }
+
+                Gdk.Rectangle geometry = monitor.get_geometry();
+                int distance = absolute_value(geometry.x) + absolute_value(geometry.y);
+                if (distance < smallest_distance) {
+                    smallest_distance = distance;
+                    selected_index = (int) i;
+                }
+            }
+
+            return selected_index;
+        }
+
+        private string build_monitor_id(string? connector, string? description, Gdk.Rectangle geometry, uint index) {
+            if (connector != null && connector != "") {
+                return "connector:" + connector;
+            }
+
+            if (description != null && description != "") {
+                return @"description:$(description)";
+            }
+
+            return @"geometry:$(geometry.width)x$(geometry.height)+$(geometry.x)+$(geometry.y):$(index)";
+        }
+
+        private bool monitor_matches_id(MonitorInfo monitor, string configured_id) {
+            if (monitor.id == configured_id) {
+                return true;
+            }
+
+            if (monitor.connector != null && configured_id == "connector:" + monitor.connector) {
+                return true;
+            }
+
+            return false;
+        }
+
+        private int absolute_value(int value) {
+            return value < 0 ? -value : value;
         }
     }
 }

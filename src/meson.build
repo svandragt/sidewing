@@ -1,4 +1,17 @@
-staba_sources = files(
+config = configuration_data()
+config.set_quoted('PROJECT_SOURCE_ROOT', meson.project_source_root())
+
+build_config = configure_file(
+  input: 'build-config.vala.in',
+  output: 'build-config.vala',
+  configuration: config,
+)
+
+staba_sources = [
+  build_config,
+]
+
+staba_sources += files(
   'main.vala',
   'application.vala',
   'models.vala',
@@ -19,10 +32,12 @@ executable(
   staba_sources,
   dependencies: [
     gtk_dep,
+    gtk4_x11_dep,
     gio_dep,
     glib_dep,
     gobject_dep,
     gee_dep,
+    x11_dep,
   ],
   install: false,
 )
