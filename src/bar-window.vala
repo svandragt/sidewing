@@ -6,6 +6,8 @@ namespace Staba {
         private PluginManager plugin_manager;
         private LogService log_service;
         private Gtk.Box items_box;
+        private Gee.ArrayList<Gtk.MenuButton> plugin_buttons;
+        private Gee.HashMap<string, Gtk.MenuButton> buttons_by_plugin_path;
 
         public BarWindow(
             Gtk.Application app,
@@ -34,35 +36,59 @@ namespace Staba {
             items_box.margin_end = 12;
             items_box.margin_top = 6;
             items_box.margin_bottom = 6;
+            plugin_buttons = new Gee.ArrayList<Gtk.MenuButton>();
+            buttons_by_plugin_path = new Gee.HashMap<string, Gtk.MenuButton>();
 
             var frame = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
             frame.add_css_class("staba-bar");
             frame.append(items_box);
 
             set_child(frame);
+            log_service.info("Bar window initialized widgets");
             update_monitor_binding();
+            bind_window_state();
             bind_plugin_manager();
-            plugin_manager.start();
         }
 
         public void queue_placement() {
             Idle.add(() => {
+                log_service.info("Running queued bar placement");
                 place_on_selected_monitor();
                 return Source.REMOVE;
             });
         }
 
+        public void start_plugins() {
+            log_service.info("Starting plugin manager");
+            plugin_manager.start();
+        }
+
         private void bind_plugin_manager() {
             plugin_manager.plugins_changed.connect(() => {
+                log_service.info("plugins_changed received; rebuilding bar items");
                 rebuild_items();
             });
 
             plugin_manager.plugin_updated.connect((record) => {
-                rebuild_items();
+                log_service.info(@"plugin_updated received for $(record.definition.filename)");
+                update_plugin_chip(record);
+            });
+        }
+
+        private void bind_window_state() {
+            notify["is-active"].connect(() => {
+                if (!is_active) {
+                    log_service.info("Bar window deactivated; dismissing open menus");
+                    close_all_menus();
+                }
             });
         }
 
         private void rebuild_items() {
+            log_service.info("Rebuilding all bar items");
+            plugin_buttons.clear();
+            buttons_by_plugin_path.clear();
+
             Gtk.Widget? child = items_box.get_first_child();
             while (child != null) {
                 Gtk.Widget? next = child.get_next_sibling();
@@ -72,10 +98,12 @@ namespace Staba {
 
             var records = plugin_manager.get_records();
             if (records.size == 0) {
+                log_service.info("No plugins discovered for bar");
                 append_message_chip("No executable plugins");
                 return;
             }
 
+            log_service.info(@"Rendering $(records.size) plugin buttons");
             foreach (var record in records) {
                 append_plugin_chip(record);
             }
@@ -88,12 +116,28 @@ namespace Staba {
                 label = record.definition.display_name;
             }
 
-            button.label = label;
             button.valign = Gtk.Align.CENTER;
             button.add_css_class("flat");
             button.add_css_class("staba-item");
             button.set_has_frame(false);
+            button.set_always_show_arrow(false);
+            button.set_direction(Gtk.ArrowType.NONE);
             button.set_popover(menu_builder.build_plugin_menu(record));
+
+            var title = new Gtk.Label(label);
+            title.add_css_class("staba-item-label");
+            title.ellipsize = Pango.EllipsizeMode.END;
+            button.set_child(title);
+
+            var click = new Gtk.GestureClick();
+            click.set_button(Gdk.BUTTON_PRIMARY);
+            click.pressed.connect((n_press, x, y) => {
+                popdown_other_buttons(button);
+            });
+            button.add_controller(click);
+
+            plugin_buttons.add(button);
+            buttons_by_plugin_path.set(record.definition.path, button);
             items_box.append(button);
         }
 
@@ -148,6 +192,48 @@ namespace Staba {
             );
             xdisplay.raise_window(xid);
             xdisplay.flush();
+        }
+
+        private void popdown_other_buttons(Gtk.MenuButton active_button) {
+            foreach (var button in plugin_buttons) {
+                if (button != active_button) {
+                    button.popdown();
+                }
+            }
+        }
+
+        private void close_all_menus() {
+            foreach (var button in plugin_buttons) {
+                button.popdown();
+            }
+        }
+
+        private void update_plugin_chip(PluginRecord record) {
+            log_service.info(@"Updating bar item in place for $(record.definition.filename)");
+            var button = buttons_by_plugin_path.get(record.definition.path);
+            if (button == null) {
+                log_service.warning(@"No existing button found for $(record.definition.filename); rebuilding");
+                rebuild_items();
+                return;
+            }
+
+            string label = record.state.visible_title;
+            if (label == "staba" || label == "") {
+                label = record.definition.display_name;
+            }
+
+            var child = button.get_child();
+            var title = child as Gtk.Label;
+            if (title != null) {
+                title.set_label(label);
+            }
+
+            var popover = button.get_popover();
+            if (popover != null) {
+                menu_builder.populate_plugin_menu(popover, record);
+            } else {
+                button.set_popover(menu_builder.build_plugin_menu(record));
+            }
         }
     }
 }

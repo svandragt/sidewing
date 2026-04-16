@@ -116,6 +116,8 @@ namespace Staba {
         public PluginDefinition definition { get; construct set; }
         public ParsedPluginState state { get; set; }
         public uint refresh_source_id { get; set; default = 0; }
+        public bool run_in_progress { get; set; default = false; }
+        public bool refresh_queued { get; set; default = false; }
 
         public PluginRecord(PluginDefinition definition) {
             Object(

@@ -27,14 +27,16 @@ namespace Staba {
         }
 
         public void start() {
+            log_service.info("Plugin manager start");
             stop();
             discover_plugins();
-            refresh_all();
             plugins_changed();
+            queue_initial_refresh();
             schedule_refreshes();
         }
 
         public void stop() {
+            log_service.info("Plugin manager stop");
             foreach (var record in plugin_records) {
                 if (record.refresh_source_id != 0) {
                     Source.remove(record.refresh_source_id);
@@ -44,33 +46,37 @@ namespace Staba {
         }
 
         public void refresh_all() {
+            log_service.info(@"Refreshing all plugins ($(plugin_records.size))");
             foreach (var record in plugin_records) {
                 refresh_record(record);
             }
         }
 
         public void refresh_record(PluginRecord record) {
-            var result = plugin_runner.run(record.definition);
-            var state = xbar_parser.parse(result.stdout_text);
-
-            if (state.visible_title == "staba" || state.visible_title == "") {
-                state.visible_title = record.definition.display_name;
+            if (record.run_in_progress) {
+                log_service.info(@"Refresh already running for $(record.definition.filename); queueing another refresh");
+                record.refresh_queued = true;
+                return;
             }
 
-            state.stderr_text = result.stderr_text;
-            if (result.exit_code != 0) {
-                state.warnings.add(@"Plugin exited with status $(result.exit_code)");
-            }
+            record.run_in_progress = true;
+            record.refresh_queued = false;
+            log_service.info(@"Dispatching async refresh for $(record.definition.filename)");
 
-            if (result.stderr_text != "") {
-                state.warnings.add(result.stderr_text.strip());
-            }
+            new Thread<int>(@"refresh-$(record.definition.filename)", () => {
+                var result = plugin_runner.run(record.definition);
 
-            record.state = state;
-            plugin_updated(record);
+                Idle.add(() => {
+                    apply_run_result(record, result);
+                    return Source.REMOVE;
+                });
+
+                return 0;
+            });
         }
 
         private void discover_plugins() {
+            log_service.info(@"Discovering plugins in $(settings_store.plugins_dir)");
             plugin_records.clear();
             var directory = File.new_for_path(settings_store.plugins_dir);
 
@@ -106,6 +112,7 @@ namespace Staba {
                         refresh_seconds
                     );
                     plugin_records.add(new PluginRecord(definition));
+                    log_service.info(@"Discovered plugin $(filename) ($(refresh_seconds)s)");
                 }
             } catch (Error err) {
                 log_service.warning(@"Plugin discovery failed: $(err.message)");
@@ -114,14 +121,53 @@ namespace Staba {
             plugin_records.sort((a, b) => {
                 return strcmp(a.definition.filename, b.definition.filename);
             });
+            log_service.info(@"Plugin discovery complete: $(plugin_records.size) plugins");
         }
 
         private void schedule_refreshes() {
             foreach (var record in plugin_records) {
+                log_service.info(@"Scheduling $(record.definition.filename) every $(record.definition.refresh_seconds)s");
                 record.refresh_source_id = Timeout.add_seconds(record.definition.refresh_seconds, () => {
+                    log_service.info(@"Timer fired for $(record.definition.filename)");
                     refresh_record(record);
                     return Source.CONTINUE;
                 });
+            }
+        }
+
+        private void queue_initial_refresh() {
+            Idle.add(() => {
+                log_service.info("Initial refresh idle callback start");
+                refresh_all();
+                log_service.info("Initial refresh idle callback end");
+                return Source.REMOVE;
+            });
+        }
+
+        private void apply_run_result(PluginRecord record, PluginRunResult result) {
+            var state = xbar_parser.parse(result.stdout_text);
+
+            if (state.visible_title == "staba" || state.visible_title == "") {
+                state.visible_title = record.definition.display_name;
+            }
+
+            state.stderr_text = result.stderr_text;
+            if (result.exit_code != 0) {
+                state.warnings.add(@"Plugin exited with status $(result.exit_code)");
+            }
+
+            if (result.stderr_text != "") {
+                state.warnings.add(result.stderr_text.strip());
+            }
+
+            record.state = state;
+            record.run_in_progress = false;
+            plugin_updated(record);
+
+            if (record.refresh_queued) {
+                log_service.info(@"Running queued refresh for $(record.definition.filename)");
+                record.refresh_queued = false;
+                refresh_record(record);
             }
         }
 

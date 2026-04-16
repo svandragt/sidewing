@@ -2,7 +2,7 @@
 
 ## Objective
 
-Build `staba` as a standalone Vala application for elementary OS 8 Classic Session on X11 that renders xbar-compatible plugin output in a secondary-display top bar.
+Build `staba` as a standalone Vala application for elementary OS 8 Classic Session on X11 that renders xbar-compatible plugin output in a bar on a secondary monitor.
 
 This plan turns the product spec into a sequence of implementation phases with clear module ownership and MVP boundaries.
 
@@ -25,7 +25,7 @@ These decisions are treated as fixed for the first implementation pass:
 - protocol-level xbar compatibility, not macOS behavior compatibility
 - unsupported xbar parameters are ignored safely
 - plugin execution is unsandboxed and explicit
-- monitor fallback attaches to primary monitor if the configured secondary monitor disappears
+- monitor fallback attaches to the primary monitor if the configured secondary monitor disappears
 
 ## Work Breakdown
 
@@ -50,7 +50,7 @@ Exit criteria:
 
 Goal:
 
-- load persistent config and detect displays
+- load persistent config and detect monitors
 
 Modules:
 
@@ -84,7 +84,7 @@ Implementation:
 - create borderless top-edge application window
 - size and place it on the selected monitor
 - render a horizontal container for plugin titles
-- support dropdown/popover attachment points
+- support plugin menu popovers
 
 Exit criteria:
 
@@ -126,7 +126,7 @@ Modules:
 Implementation:
 
 - parse title lines
-- split dropdown content at `---`
+- split menu content at `---`
 - parse line parameters after `|`
 - track submenu depth from leading `--`
 - retain per-line parse warnings
@@ -149,7 +149,7 @@ Modules:
 Implementation:
 
 - show plugin title in the bar
-- build dropdown menus from parsed items
+- build plugin menus from parsed items
 - support separators, disabled items, and submenu nesting
 - support `href`
 - support `shell` + `paramN`
@@ -201,7 +201,7 @@ Implementation:
 
 Exit criteria:
 
-- app behaves like a stable secondary-display utility and is easy to launch on login
+- app behaves like a stable secondary-monitor utility and is easy to launch on login
 
 ## Module Responsibilities
 
@@ -358,13 +358,13 @@ Dependencies:
 
 - `MonitorInfo`
   - stable ID
-  - connector or display name
+  - connector or monitor name
   - geometry
   - primary flag
 
 - `PluginDefinition`
   - absolute path
-  - display name
+  - monitor name
   - interval
   - enabled flag
   - metadata

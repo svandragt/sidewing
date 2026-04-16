@@ -4,22 +4,22 @@ Status: MVP frozen
 
 ## Summary
 
-`staba` is a Vala desktop application for elementary OS 8 that renders an xbar-compatible status bar on a secondary display in the X11 "Classic Session".
+`staba` is a Vala desktop application for elementary OS 8 that renders an xbar-compatible bar on a secondary monitor in the X11 "Classic Session".
 
 The product goal is simple:
 
 - Run executable plugins from a local directory.
 - Parse their stdout using an xbar-like text protocol.
-- Render the primary line as a compact top bar item on a chosen non-primary monitor.
-- Show the remaining lines as a dropdown menu.
+- Render the primary line as a compact bar item on a chosen non-primary monitor.
+- Show the remaining lines in a plugin menu.
 
 Working title: `staba`
 
-Tagline: Put the output from any script or program into your elementary OS top bar.
+Tagline: Put the output from any script or program into your elementary OS bar.
 
 ## Problem Statement
 
-Wingpanel is designed as the system top panel, but in practice users with multiple displays may want a lightweight status bar on a secondary monitor showing custom status, actions, and menus driven by scripts.
+Wingpanel is designed as the system top panel, but in practice users with multiple monitors may want a lightweight bar on a secondary monitor showing custom status, actions, and menus driven by scripts.
 
 `staba` fills that gap by providing:
 
@@ -49,7 +49,7 @@ Wingpanel is designed as the system top panel, but in practice users with multip
 
 - OS: elementary OS 8.x
 - Session target for MVP: X11 Classic Session
-- Display model: multi-monitor setups with one primary display and at least one secondary display
+- Display model: multi-monitor setups with one primary monitor and at least one secondary monitor
 - Language: Vala
 - UI stack: GTK4 + Granite if it improves integration with elementary OS
 - Packaging target: native deb for development; Flatpak may be evaluated later, but is not the primary MVP target because unrestricted local script execution is central to the app
@@ -66,7 +66,7 @@ Wingpanel is designed as the system top panel, but in practice users with multip
 
 - As a user, I can place a thin bar on a secondary monitor so it feels like that monitor has its own top status area.
 - As a user, I can point `staba` at a plugins directory and see compatible plugins appear without writing app-specific code.
-- As a user, I can click a status item to open a dropdown menu populated from plugin output.
+- As a user, I can click a status item to open a plugin menu populated from plugin output.
 - As a user, I can trigger plugin-defined actions from menu items.
 - As a user, I can refresh one plugin or all plugins.
 - As a user, I can choose which monitor hosts the `staba` bar.
@@ -106,7 +106,7 @@ Examples:
 Each plugin produces:
 
 - one or more bar lines
-- zero or more dropdown lines after a separator line `---`
+- zero or more menu lines after a separator line `---`
 
 Internally, `staba` parses plugin stdout into a normalized item tree:
 
@@ -141,7 +141,7 @@ Recommended MVP layout:
 
 - A single horizontal row of plugin widgets
 - Each plugin shows only its current bar title
-- Clicking a plugin opens a popover/dropdown menu below the bar
+- Clicking a plugin opens a menu below the bar
 
 If a plugin emits multiple pre-`---` lines, `staba` should cycle them like xbar only if the implementation cost is reasonable. Otherwise, the first line is shown in MVP and cycling is deferred.
 
@@ -161,9 +161,9 @@ If the configured monitor disappears:
 
 Recommended MVP fallback: attach to primary monitor with a warning in settings/logs.
 
-## Dropdown Behavior
+## Menu Behavior
 
-Dropdowns should:
+Menus should:
 
 - appear directly below the clicked plugin item
 - close when focus is lost or escape is pressed
@@ -269,7 +269,7 @@ If a file is not executable, `staba` should mark it invalid and show the reason 
 `staba` MVP should support these xbar behaviors:
 
 - plain text lines
-- `---` as dropdown separator boundary
+- `---` as menu separator boundary
 - leading `--` for submenu nesting
 - `|` parameter separator
 - `href=...`
@@ -432,8 +432,8 @@ Plugin stdout is split by newline.
 Parsing rules:
 
 - lines before first `---` are bar lines
-- lines after first `---` are dropdown lines
-- a line that is exactly `---` inside dropdown content becomes a visual separator
+- lines after first `---` are menu lines
+- a line that is exactly `---` inside menu content becomes a visual separator
 - leading `--` increments submenu nesting level by one per two dashes
 
 Example:
@@ -520,7 +520,7 @@ Suggested internal modules:
 - `BarWindow`
   - top-edge monitor-bound window
 - `MonitorManager`
-  - display discovery and monitor selection
+  - monitor discovery and monitor selection
 - `PluginManager`
   - discovery, enable/disable, scheduling
 - `PluginRunner`
@@ -602,7 +602,7 @@ The MVP should include:
 - xbar-style filename interval parsing
 - independent plugin scheduling
 - text output parsing
-- dropdown menus
+- plugin menus
 - visual submenu indentation
 - `href` support
 - `shell` + `paramN` support
@@ -663,7 +663,7 @@ The MVP should include:
 
 - A user can place an executable plugin in the plugins directory and see it appear after refresh.
 - A valid plugin like `date.1m.sh` renders output in the bar.
-- Clicking the plugin opens a dropdown menu parsed from stdout.
+- Clicking the plugin opens a plugin menu parsed from stdout.
 - Menu items with `href` open in the default browser.
 - Menu items with `shell` run commands with `paramN` arguments.
 - Plugin variables declared with `<xbar.var>` are editable and become environment variables at runtime.
@@ -673,4 +673,4 @@ The MVP should include:
 
 ## Short Positioning Statement
 
-`staba` is "xbar for a secondary display on elementary OS Classic Session": a small Vala app that runs local plugins and renders their output as a scriptable top bar on X11.
+`staba` is "xbar for a secondary monitor on elementary OS Classic Session": a small Vala app that runs local plugins and renders their output as a scriptable bar on X11.

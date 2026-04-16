@@ -10,6 +10,21 @@ namespace Staba {
 
         public Gtk.Widget build_plugin_menu(PluginRecord record) {
             var popover = new Gtk.Popover();
+            popover.set_has_arrow(false);
+            popover.set_autohide(false);
+            popover.set_cascade_popdown(false);
+            popover.set_position(Gtk.PositionType.BOTTOM);
+            popover.set_offset(0, 6);
+            populate_plugin_menu(popover, record);
+            return popover;
+        }
+
+        public void populate_plugin_menu(Gtk.Popover popover, PluginRecord record) {
+            var existing_child = popover.get_child();
+            if (existing_child != null) {
+                popover.set_child(null);
+            }
+
             var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 6);
             box.margin_start = 12;
             box.margin_end = 12;
@@ -41,8 +56,6 @@ namespace Staba {
             }
 
             popover.set_child(box);
-
-            return popover;
         }
 
         private Gtk.Widget build_item_widget(PluginRecord record, ParsedItem item) {

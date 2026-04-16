@@ -20,13 +20,23 @@ namespace Staba {
 
         protected override void activate() {
             initialize_services();
+            log_service.info("Application activate start");
 
             if (bar_window == null) {
+                log_service.info("Creating bar window");
                 bar_window = new BarWindow(this, settings_store, monitor_manager, menu_builder, plugin_manager, log_service);
             }
 
+            log_service.info("Presenting bar window");
             bar_window.present();
+            log_service.info("Queueing X11 placement");
             bar_window.queue_placement();
+            Idle.add(() => {
+                log_service.info("Starting plugins after initial present");
+                bar_window.start_plugins();
+                return Source.REMOVE;
+            });
+            log_service.info("Application activate end");
         }
 
         private void initialize_services() {
@@ -86,6 +96,10 @@ namespace Staba {
                 }
 
                 .staba-item label {
+                    color: #d7dae0;
+                }
+
+                .staba-item-label {
                     color: #d7dae0;
                 }
 
