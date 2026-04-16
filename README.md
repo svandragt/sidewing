@@ -85,6 +85,7 @@ From the bar app menu you can:
 
 - install a user desktop entry
 - enable or disable autostart for the current user session
+- toggle whether the bar should reserve space for maximized windows on X11
 
 ## Plugin Naming
 

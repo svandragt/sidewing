@@ -6,6 +6,9 @@ namespace Sidewing {
         public string plugins_dir { get; private set; }
         public string? selected_monitor_id { get; set; }
         public int bar_height { get; set; default = 32; }
+        public bool reserve_space_for_maximized_windows { get; private set; default = false; }
+
+        public signal void stacking_preferences_changed();
 
         public SettingsStore() {
             config_dir = Path.build_filename(Environment.get_user_config_dir(), "sidewing");
@@ -31,6 +34,16 @@ namespace Sidewing {
             save();
         }
 
+        public void update_reserve_space_for_maximized_windows(bool reserve_space_for_maximized_windows) {
+            if (this.reserve_space_for_maximized_windows == reserve_space_for_maximized_windows) {
+                return;
+            }
+
+            this.reserve_space_for_maximized_windows = reserve_space_for_maximized_windows;
+            save();
+            stacking_preferences_changed();
+        }
+
         public void load() {
             var key_file = new KeyFile();
             bool should_resave = false;
@@ -48,6 +61,13 @@ namespace Sidewing {
 
                 if (key_file.has_key("general", "bar_height")) {
                     bar_height = key_file.get_integer("general", "bar_height");
+                }
+
+                if (key_file.has_key("general", "reserve_space_for_maximized_windows")) {
+                    reserve_space_for_maximized_windows = key_file.get_boolean(
+                        "general",
+                        "reserve_space_for_maximized_windows"
+                    );
                 }
             } catch (FileError err) {
                 // Missing config file is expected on first launch.
@@ -79,6 +99,11 @@ namespace Sidewing {
                 var key_file = new KeyFile();
                 key_file.set_string("general", "plugins_dir", plugins_dir);
                 key_file.set_integer("general", "bar_height", bar_height);
+                key_file.set_boolean(
+                    "general",
+                    "reserve_space_for_maximized_windows",
+                    reserve_space_for_maximized_windows
+                );
 
                 if (selected_monitor_id != null && selected_monitor_id != "") {
                     key_file.set_string("general", "selected_monitor_id", selected_monitor_id);

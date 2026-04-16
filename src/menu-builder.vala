@@ -107,6 +107,16 @@ namespace Sidewing {
             });
             box.append(open_plugins_button);
 
+            var reserve_space_row = build_menu_switch_row(
+                "Reserve Space For Maximized Windows",
+                settings_store.reserve_space_for_maximized_windows,
+                (state) => {
+                    settings_store.update_reserve_space_for_maximized_windows(state);
+                    populate_app_menu(popover);
+                }
+            );
+            box.append(reserve_space_row);
+
             var install_desktop_button = new Gtk.Button.with_label("Install Desktop Entry");
             install_desktop_button.halign = Gtk.Align.FILL;
             install_desktop_button.hexpand = true;
@@ -119,25 +129,20 @@ namespace Sidewing {
             });
             box.append(install_desktop_button);
 
-            string autostart_label = desktop_integration.is_autostart_enabled()
-                ? "Disable Autostart"
-                : "Enable Autostart";
-            var autostart_button = new Gtk.Button.with_label(autostart_label);
-            autostart_button.halign = Gtk.Align.FILL;
-            autostart_button.hexpand = true;
-            autostart_button.add_css_class("flat");
-            autostart_button.add_css_class("sidewing-menu-item");
-            autostart_button.set_can_focus(false);
-            autostart_button.clicked.connect(() => {
-                if (desktop_integration.is_autostart_enabled()) {
-                    desktop_integration.disable_autostart();
-                } else {
-                    desktop_integration.enable_autostart();
-                }
+            var autostart_row = build_menu_switch_row(
+                "Autostart on Login",
+                desktop_integration.is_autostart_enabled(),
+                (state) => {
+                    if (state) {
+                        desktop_integration.enable_autostart();
+                    } else {
+                        desktop_integration.disable_autostart();
+                    }
 
-                populate_app_menu(popover);
-            });
-            box.append(autostart_button);
+                    populate_app_menu(popover);
+                }
+            );
+            box.append(autostart_row);
 
             var refresh_all_button = new Gtk.Button.with_label("Refresh All");
             refresh_all_button.halign = Gtk.Align.FILL;
@@ -200,6 +205,37 @@ namespace Sidewing {
 
             return button;
         }
+
+        private Gtk.Widget build_menu_switch_row(
+            string label_text,
+            bool active,
+            owned ToggleHandler on_toggled
+        ) {
+            var row = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 12);
+            row.halign = Gtk.Align.FILL;
+            row.hexpand = true;
+            row.add_css_class("sidewing-menu-item");
+
+            var label = new Gtk.Label(label_text);
+            label.halign = Gtk.Align.START;
+            label.hexpand = true;
+            label.xalign = 0.0f;
+            row.append(label);
+
+            var toggle = new Gtk.Switch();
+            toggle.halign = Gtk.Align.END;
+            toggle.valign = Gtk.Align.CENTER;
+            toggle.set_active(active);
+            toggle.state_set.connect((state) => {
+                on_toggled(state);
+                return false;
+            });
+            row.append(toggle);
+
+            return row;
+        }
+
+        private delegate void ToggleHandler(bool state);
 
         private Gtk.Label build_info_label(string text) {
             var label = new Gtk.Label(text);
