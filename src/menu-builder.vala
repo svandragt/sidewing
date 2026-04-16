@@ -225,10 +225,10 @@ namespace Sidewing {
             var toggle = new Gtk.Switch();
             toggle.halign = Gtk.Align.END;
             toggle.valign = Gtk.Align.CENTER;
+            toggle.set_state(active);
             toggle.set_active(active);
-            toggle.state_set.connect((state) => {
-                on_toggled(state);
-                return false;
+            toggle.notify["active"].connect(() => {
+                on_toggled(toggle.get_active());
             });
             row.append(toggle);
 
