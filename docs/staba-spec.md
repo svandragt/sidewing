@@ -1,5 +1,7 @@
 # staba Specification
 
+Status: MVP frozen
+
 ## Summary
 
 `staba` is a Vala desktop application for elementary OS 8 that renders an xbar-compatible status bar on a secondary display in the X11 "Classic Session".
@@ -595,26 +597,32 @@ Recommended log destination:
 The MVP should include:
 
 - single bar on one selected monitor
+- one visible bar title per plugin
 - plugin directory scanning
 - xbar-style filename interval parsing
 - independent plugin scheduling
 - text output parsing
 - dropdown menus
-- submenu nesting
+- visual submenu indentation
 - `href` support
 - `shell` + `paramN` support
 - `refresh=true` support
-- plugin metadata parsing
-- variables sidecar JSON support
-- monitor selection UI
-- logging and basic error UI
-- autostart option
+- basic plugin metadata parsing
+- onboarding that seeds the user plugin directory with example plugins when empty
+- persisted monitor selection
+- logging and basic error surfacing
 - bundled example plugins for Linux-friendly common tasks
 
 ## Post-MVP
 
 - Wayland support where feasible
 - multiple bars across multiple monitors
+- multiple independently visible bar items emitted by one plugin
+- exact xbar-style bar-line cycling
+- true nested submenu widgets instead of indentation-only submenu display
+- full xbar variables sidecar JSON support
+- monitor selection UI
+- autostart option
 - richer image/icon support
 - drag-and-drop plugin management
 - plugin gallery/import UX
@@ -624,14 +632,14 @@ The MVP should include:
 - CSS/theme customization
 - DBus control API
 
-## Open Questions
+## Resolved MVP Decisions
 
-- Should `staba` show one item per plugin only, or support multiple independent visible bar items emitted by a single plugin?
-- Should bar lines cycle exactly like xbar, or should `staba` standardize on first-line display in MVP?
-- Should `alternate=true` be emulated somehow in GTK menus, or deferred entirely?
-- Should `terminal=true` open `io.elementary.terminal`, `xdg-terminal-exec`, or a user-configured command?
-- Should invalid plugins be hidden by default or shown as disabled entries in settings?
-- Is monitor hotplug behavior allowed to move the bar automatically, or should it require user confirmation?
+- `staba` shows one visible bar title per plugin in MVP.
+- If a plugin emits multiple pre-`---` lines, the first line is used as the visible title in MVP.
+- `alternate=true` is deferred and may be parsed as a no-op.
+- `terminal=true` is deferred; Linux terminal launching is not part of the MVP contract.
+- Invalid or non-executable plugins are ignored by the runtime and surfaced through logs/error UI rather than shown in the bar.
+- If monitor hotplug invalidates the stored target, `staba` may move automatically to the next best monitor based on the existing fallback rules.
 
 ## Recommended Decisions for Initial Build
 
@@ -641,6 +649,13 @@ The MVP should include:
 - Ignore unsupported macOS-specific features safely.
 - Keep plugin execution unsandboxed but explicit.
 - Optimize for compatibility with shell, Python, Ruby, and other CLI-driven plugins that already work on Linux.
+
+## Deferred Decisions
+
+- Whether to emulate exact xbar bar-title cycling behavior after MVP.
+- Which Linux terminal launcher should back `terminal=true`.
+- Whether invalid plugins should eventually appear as disabled rows in a settings UI.
+- Whether monitor hotplug should become user-configurable instead of automatic.
 
 ## Acceptance Criteria
 
