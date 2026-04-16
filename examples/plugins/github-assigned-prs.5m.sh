@@ -23,8 +23,9 @@ if ! gh auth status >/dev/null 2>&1; then
 fi
 
 count="$(
-    gh search prs --state open --assignee @me --json number --limit 100 2>/dev/null \
-    | awk 'BEGIN { count = 0 } /"number"[[:space:]]*:/ { count++ } END { print count }'
+    gh search prs --state open --assignee @me --json number,repository --limit 100 \
+        --jq 'map("\(.repository.nameWithOwner)#\(.number)") | unique | length' \
+        2>/dev/null
 )"
 
 if [ -z "$count" ]; then
