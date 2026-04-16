@@ -20,6 +20,7 @@ The current codebase is an MVP-in-progress. It already discovers and runs plugin
 - Uses the first pre-`---` line as the visible bar label
 - Uses lines after `---` as menu items
 - Supports menu separators, disabled items, basic nested indentation, `href=...`, and `refresh=true`
+- Adds a right-aligned app menu with plugin-folder and refresh-all actions
 - Seeds the user plugin directory with bundled example plugins on first launch
 - Prefers a non-primary monitor and falls back to the primary monitor if needed
 
@@ -28,7 +29,7 @@ The current codebase is an MVP-in-progress. It already discovers and runs plugin
 The implementation is narrower than the long-term spec.
 
 - X11 placement is implemented; Wayland support is not
-- There is no settings UI yet
+- There is no full settings UI yet
 - There is no installed desktop file or autostart integration yet
 - Plugin actions currently support opening URLs and triggering refreshes, but not `shell=` / `paramN=` execution
 - Unsupported xbar metadata is ignored

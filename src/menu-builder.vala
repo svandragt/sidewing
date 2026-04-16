@@ -2,10 +2,16 @@ namespace Sidewing {
     public class MenuBuilder : Object {
         private ActionDispatcher action_dispatcher;
         private PluginManager plugin_manager;
+        private SettingsStore settings_store;
 
-        public MenuBuilder(ActionDispatcher action_dispatcher, PluginManager plugin_manager) {
+        public MenuBuilder(
+            ActionDispatcher action_dispatcher,
+            PluginManager plugin_manager,
+            SettingsStore settings_store
+        ) {
             this.action_dispatcher = action_dispatcher;
             this.plugin_manager = plugin_manager;
+            this.settings_store = settings_store;
         }
 
         public Gtk.Widget build_plugin_menu(PluginRecord record) {
@@ -16,6 +22,17 @@ namespace Sidewing {
             popover.set_position(Gtk.PositionType.BOTTOM);
             popover.set_offset(0, 6);
             populate_plugin_menu(popover, record);
+            return popover;
+        }
+
+        public Gtk.Widget build_app_menu() {
+            var popover = new Gtk.Popover();
+            popover.set_has_arrow(false);
+            popover.set_autohide(false);
+            popover.set_cascade_popdown(false);
+            popover.set_position(Gtk.PositionType.BOTTOM);
+            popover.set_offset(0, 6);
+            populate_app_menu(popover);
             return popover;
         }
 
@@ -54,6 +71,49 @@ namespace Sidewing {
                     box.append(warning);
                 }
             }
+
+            popover.set_child(box);
+        }
+
+        public void populate_app_menu(Gtk.Popover popover) {
+            var existing_child = popover.get_child();
+            if (existing_child != null) {
+                popover.set_child(null);
+            }
+
+            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 6);
+            box.margin_start = 12;
+            box.margin_end = 12;
+            box.margin_top = 12;
+            box.margin_bottom = 12;
+            box.add_css_class("sidewing-menu");
+
+            var heading = new Gtk.Label("Sidewing");
+            heading.halign = Gtk.Align.START;
+            heading.add_css_class("heading");
+            box.append(heading);
+
+            var open_plugins_button = new Gtk.Button.with_label("Open Plugins Folder");
+            open_plugins_button.halign = Gtk.Align.FILL;
+            open_plugins_button.hexpand = true;
+            open_plugins_button.add_css_class("flat");
+            open_plugins_button.add_css_class("sidewing-menu-item");
+            open_plugins_button.set_can_focus(false);
+            open_plugins_button.clicked.connect(() => {
+                action_dispatcher.open_directory(settings_store.plugins_dir);
+            });
+            box.append(open_plugins_button);
+
+            var refresh_all_button = new Gtk.Button.with_label("Refresh All");
+            refresh_all_button.halign = Gtk.Align.FILL;
+            refresh_all_button.hexpand = true;
+            refresh_all_button.add_css_class("flat");
+            refresh_all_button.add_css_class("sidewing-menu-item");
+            refresh_all_button.set_can_focus(false);
+            refresh_all_button.clicked.connect(() => {
+                plugin_manager.refresh_all();
+            });
+            box.append(refresh_all_button);
 
             popover.set_child(box);
         }

@@ -16,5 +16,10 @@ namespace Sidewing {
                 log_service.warning(@"Failed to open URI $uri: $(err.message)");
             }
         }
+
+        public void open_directory(string path) {
+            var directory = File.new_for_path(path);
+            open_uri(directory.get_uri());
+        }
     }
 }

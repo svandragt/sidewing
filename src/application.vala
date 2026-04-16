@@ -53,7 +53,7 @@ namespace Sidewing {
             xbar_parser = new XbarParser();
             plugin_manager = new PluginManager(settings_store, plugin_runner, xbar_parser, log_service);
             action_dispatcher = new ActionDispatcher(this, log_service);
-            menu_builder = new MenuBuilder(action_dispatcher, plugin_manager);
+            menu_builder = new MenuBuilder(action_dispatcher, plugin_manager, settings_store);
             load_css();
 
             log_service.info("Sidewing initialized");

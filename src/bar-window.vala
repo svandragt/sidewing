@@ -6,6 +6,7 @@ namespace Sidewing {
         private PluginManager plugin_manager;
         private LogService log_service;
         private Gtk.Box items_box;
+        private Gtk.MenuButton settings_button;
         private Gee.ArrayList<Gtk.MenuButton> plugin_buttons;
         private Gee.HashMap<string, Gtk.MenuButton> buttons_by_plugin_path;
 
@@ -33,15 +34,36 @@ namespace Sidewing {
 
             items_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 6);
             items_box.margin_start = 12;
-            items_box.margin_end = 12;
             items_box.margin_top = 6;
             items_box.margin_bottom = 6;
+            items_box.hexpand = true;
+
+            var settings_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
+            settings_box.margin_end = 12;
+            settings_box.margin_top = 6;
+            settings_box.margin_bottom = 6;
+
+            settings_button = new Gtk.MenuButton();
+            settings_button.valign = Gtk.Align.CENTER;
+            settings_button.add_css_class("flat");
+            settings_button.add_css_class("sidewing-item");
+            settings_button.set_has_frame(false);
+            settings_button.set_always_show_arrow(false);
+            settings_button.set_direction(Gtk.ArrowType.NONE);
+            settings_button.tooltip_text = "Settings";
+            settings_button.set_popover(menu_builder.build_app_menu());
+
+            var settings_icon = new Gtk.Image.from_icon_name("emblem-system-symbolic");
+            settings_button.set_child(settings_icon);
+            settings_box.append(settings_button);
+
             plugin_buttons = new Gee.ArrayList<Gtk.MenuButton>();
             buttons_by_plugin_path = new Gee.HashMap<string, Gtk.MenuButton>();
 
             var frame = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
             frame.add_css_class("sidewing-bar");
             frame.append(items_box);
+            frame.append(settings_box);
 
             set_child(frame);
             log_service.info("Bar window initialized widgets");
