@@ -78,6 +78,66 @@ namespace Sidewing {
         private void discover_plugins() {
             log_service.info(@"Discovering plugins in $(settings_store.plugins_dir)");
             plugin_records.clear();
+            foreach (var definition in enumerate_plugin_definitions()) {
+                plugin_records.add(new PluginRecord(definition));
+            }
+
+            plugin_records.sort((a, b) => {
+                return strcmp(a.definition.filename, b.definition.filename);
+            });
+            log_service.info(@"Plugin discovery complete: $(plugin_records.size) plugins");
+        }
+
+        private void schedule_refreshes() {
+            foreach (var record in plugin_records) {
+                schedule_refresh(record);
+            }
+        }
+
+        private void queue_initial_refresh() {
+            Idle.add(() => {
+                log_service.info("Initial refresh idle callback start");
+                refresh_all();
+                log_service.info("Initial refresh idle callback end");
+                return Source.REMOVE;
+            });
+        }
+
+        private void apply_run_result(PluginRecord record, PluginRunResult result) {
+            if (result.missing_executable) {
+                record.run_in_progress = false;
+                handle_missing_plugin(record);
+                return;
+            }
+
+            var state = xbar_parser.parse(result.stdout_text);
+
+            if (state.visible_title == "Sidewing" || state.visible_title == "") {
+                state.visible_title = record.definition.display_name;
+            }
+
+            state.stderr_text = result.stderr_text;
+            if (result.exit_code != 0) {
+                state.warnings.add(@"Plugin exited with status $(result.exit_code)");
+            }
+
+            if (result.stderr_text != "") {
+                state.warnings.add(result.stderr_text.strip());
+            }
+
+            record.state = state;
+            record.run_in_progress = false;
+            plugin_updated(record);
+
+            if (record.refresh_queued) {
+                log_service.info(@"Running queued refresh for $(record.definition.filename)");
+                record.refresh_queued = false;
+                refresh_record(record);
+            }
+        }
+
+        private Gee.ArrayList<PluginDefinition> enumerate_plugin_definitions() {
+            var definitions = new Gee.ArrayList<PluginDefinition>();
             var directory = File.new_for_path(settings_store.plugins_dir);
 
             try {
@@ -111,64 +171,76 @@ namespace Sidewing {
                         build_display_name(filename),
                         refresh_seconds
                     );
-                    plugin_records.add(new PluginRecord(definition));
+                    definitions.add(definition);
                     log_service.info(@"Discovered plugin $(filename) ($(refresh_seconds)s)");
                 }
             } catch (Error err) {
                 log_service.warning(@"Plugin discovery failed: $(err.message)");
             }
 
+            return definitions;
+        }
+
+        private void handle_missing_plugin(PluginRecord record) {
+            log_service.warning(
+                @"Plugin executable disappeared for $(record.definition.filename); attempting soft reload"
+            );
+
+            if (record.refresh_source_id != 0) {
+                Source.remove(record.refresh_source_id);
+                record.refresh_source_id = 0;
+            }
+
+            var replacement_definition = find_replacement_definition(record);
+            int record_index = plugin_records.index_of(record);
+
+            if (record_index < 0) {
+                log_service.warning(@"Missing plugin record not found in manager for $(record.definition.filename)");
+                return;
+            }
+
+            if (replacement_definition == null) {
+                log_service.warning(@"No replacement plugin found for $(record.definition.filename); removing stale record");
+                plugin_records.remove_at(record_index);
+                plugins_changed();
+                return;
+            }
+
+            var replacement_record = new PluginRecord(replacement_definition);
+            plugin_records.set(record_index, replacement_record);
             plugin_records.sort((a, b) => {
                 return strcmp(a.definition.filename, b.definition.filename);
             });
-            log_service.info(@"Plugin discovery complete: $(plugin_records.size) plugins");
+
+            schedule_refresh(replacement_record);
+            plugins_changed();
+            refresh_record(replacement_record);
         }
 
-        private void schedule_refreshes() {
-            foreach (var record in plugin_records) {
-                log_service.info(@"Scheduling $(record.definition.filename) every $(record.definition.refresh_seconds)s");
-                record.refresh_source_id = Timeout.add_seconds(record.definition.refresh_seconds, () => {
-                    log_service.info(@"Timer fired for $(record.definition.filename)");
-                    refresh_record(record);
-                    return Source.CONTINUE;
-                });
+        private PluginDefinition? find_replacement_definition(PluginRecord record) {
+            foreach (var definition in enumerate_plugin_definitions()) {
+                if (definition.path == record.definition.path) {
+                    return definition;
+                }
+
+                if (definition.display_name == record.definition.display_name) {
+                    log_service.info(
+                        @"Matched renamed plugin $(record.definition.filename) -> $(definition.filename)"
+                    );
+                    return definition;
+                }
             }
+
+            return null;
         }
 
-        private void queue_initial_refresh() {
-            Idle.add(() => {
-                log_service.info("Initial refresh idle callback start");
-                refresh_all();
-                log_service.info("Initial refresh idle callback end");
-                return Source.REMOVE;
-            });
-        }
-
-        private void apply_run_result(PluginRecord record, PluginRunResult result) {
-            var state = xbar_parser.parse(result.stdout_text);
-
-            if (state.visible_title == "Sidewing" || state.visible_title == "") {
-                state.visible_title = record.definition.display_name;
-            }
-
-            state.stderr_text = result.stderr_text;
-            if (result.exit_code != 0) {
-                state.warnings.add(@"Plugin exited with status $(result.exit_code)");
-            }
-
-            if (result.stderr_text != "") {
-                state.warnings.add(result.stderr_text.strip());
-            }
-
-            record.state = state;
-            record.run_in_progress = false;
-            plugin_updated(record);
-
-            if (record.refresh_queued) {
-                log_service.info(@"Running queued refresh for $(record.definition.filename)");
-                record.refresh_queued = false;
+        private void schedule_refresh(PluginRecord record) {
+            log_service.info(@"Scheduling $(record.definition.filename) every $(record.definition.refresh_seconds)s");
+            record.refresh_source_id = Timeout.add_seconds(record.definition.refresh_seconds, () => {
+                log_service.info(@"Timer fired for $(record.definition.filename)");
                 refresh_record(record);
-            }
+                return Source.CONTINUE;
+            });
         }
 
         private bool is_executable(FileInfo info) {

@@ -60,13 +60,21 @@ namespace Sidewing {
         public string stderr_text { get; construct set; }
         public int exit_code { get; construct set; }
         public bool timed_out { get; construct set; }
+        public bool missing_executable { get; construct set; }
 
-        public PluginRunResult(string stdout_text = "", string stderr_text = "", int exit_code = 0, bool timed_out = false) {
+        public PluginRunResult(
+            string stdout_text = "",
+            string stderr_text = "",
+            int exit_code = 0,
+            bool timed_out = false,
+            bool missing_executable = false
+        ) {
             Object(
                 stdout_text: stdout_text,
                 stderr_text: stderr_text,
                 exit_code: exit_code,
-                timed_out: timed_out
+                timed_out: timed_out,
+                missing_executable: missing_executable
             );
         }
     }

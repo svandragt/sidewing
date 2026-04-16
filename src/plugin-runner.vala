@@ -39,7 +39,13 @@ namespace Sidewing {
                 );
             } catch (Error err) {
                 log_service.warning(@"Plugin run failed for $(plugin.filename): $(err.message)");
-                return new PluginRunResult("", err.message, 1, false);
+                return new PluginRunResult(
+                    "",
+                    err.message,
+                    1,
+                    false,
+                    err.message.contains("No such file or directory")
+                );
             }
         }
     }
