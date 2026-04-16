@@ -20,9 +20,10 @@ The current codebase is an MVP-in-progress. It already discovers and runs plugin
 - Uses the first pre-`---` line as the visible bar label
 - Uses lines after `---` as menu items
 - Supports menu separators, disabled items, basic nested indentation, `href=...`, `shell=...`, `paramN=...`, and `refresh=true`
-- Adds a right-aligned app menu with plugin-folder and refresh-all actions
+- Adds a right-aligned app menu with plugin-folder, desktop-entry, autostart, reserve-space, and refresh-all actions
 - Seeds the user plugin directory with bundled example plugins on first launch
 - Prefers a non-primary monitor and falls back to the primary monitor if needed
+- Uses a Wingpanel-inspired translucent bar that becomes opaque when the active window on that monitor is maximized
 
 ## Current Limitations
 
@@ -86,6 +87,7 @@ From the bar app menu you can:
 - install a user desktop entry
 - enable or disable autostart for the current user session
 - toggle whether the bar should reserve space for maximized windows on X11
+- refresh all plugins
 
 ## Plugin Naming
 

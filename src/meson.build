@@ -1,5 +1,6 @@
 config = configuration_data()
 config.set_quoted('PROJECT_SOURCE_ROOT', meson.project_source_root())
+config.set_quoted('APPLICATION_CSS_PATH', meson.project_source_root() / 'src' / 'application.css')
 
 build_config = configure_file(
   input: 'build-config.vala.in',

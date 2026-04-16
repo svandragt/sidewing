@@ -69,79 +69,17 @@ namespace Sidewing {
 
         private void load_css() {
             var provider = new Gtk.CssProvider();
-            provider.load_from_string("""
-                window.sidewing-window {
-                    background: rgba(28, 30, 34, 0.94);
-                    color: rgba(255, 255, 255, 0.94);
-                }
+            string css_path = Build.APPLICATION_CSS_PATH;
+            if (!FileUtils.test(css_path, FileTest.EXISTS)) {
+                css_path = Path.build_filename(Environment.get_current_dir(), "src", "application.css");
+            }
 
-                .sidewing-bar {
-                    min-height: 28px;
-                    padding: 0;
-                    background: rgba(28, 30, 34, 0.94);
-                    color: #d7dae0;
-                }
-
-                .sidewing-bar,
-                .sidewing-bar label,
-                .sidewing-bar button,
-                .sidewing-bar button label,
-                .sidewing-bar menubutton,
-                .sidewing-bar menubutton label,
-                .sidewing-bar image {
-                    color: #d7dae0;
-                }
-
-                .sidewing-item {
-                    min-height: 24px;
-                    padding: 0 8px;
-                    margin: 0 1px;
-                    border-radius: 6px;
-                    color: #d7dae0;
-                    font-size: 10.5pt;
-                    font-weight: 600;
-                    background: transparent;
-                }
-
-                .sidewing-item label {
-                    color: #d7dae0;
-                }
-
-                .sidewing-item-label {
-                    color: #d7dae0;
-                }
-
-                .sidewing-item:hover {
-                    background: rgba(255, 255, 255, 0.10);
-                    color: #f2f4f8;
-                }
-
-                .sidewing-item:hover label {
-                    color: #f2f4f8;
-                }
-
-                popover contents,
-                .sidewing-menu {
-                    background: rgba(33, 35, 40, 0.98);
-                    color: rgba(255, 255, 255, 0.94);
-                    border-radius: 10px;
-                }
-
-                .sidewing-menu-item {
-                    min-height: 26px;
-                    padding: 4px 8px;
-                    border-radius: 6px;
-                    color: rgba(255, 255, 255, 0.94);
-                }
-
-                .sidewing-menu-item:hover {
-                    background: rgba(255, 255, 255, 0.10);
-                }
-
-                .warning {
-                    color: #ffb36b;
-                }
-            """);
+            try {
+                provider.load_from_path(css_path);
+            } catch (Error err) {
+                log_service.warning(@"Failed to load CSS from $(css_path): $(err.message)");
+                return;
+            }
 
             var display = Gdk.Display.get_default();
             if (display != null) {

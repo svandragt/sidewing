@@ -1,0 +1,142 @@
+window.sidewing-window {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.94);
+}
+
+window.sidewing-window:backdrop {
+    color: rgba(255, 255, 255, 0.94);
+}
+
+.sidewing-bar {
+    min-height: 30px;
+    padding: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.96);
+    box-shadow:
+        0 1px 3px alpha(#000, 0.15),
+        0 1px 1px alpha(#000, 0.3);
+    transition: background 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidewing-bar.sidewing-bar-opaque {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.sidewing-item {
+    min-height: 22px;
+    margin: 0;
+    border-radius: 6px;
+    background: transparent;
+}
+
+.composited-indicator {
+    padding: 0 6px;
+    color: rgba(255, 255, 255, 0.96);
+    filter: none;
+    opacity: 1;
+    text-shadow:
+        0 0 2px alpha(black, 0.3),
+        0 1px 2px alpha(black, 0.6);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.composited-indicator label,
+.composited-indicator image,
+.composited-indicator-label {
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.sidewing-bar .composited-indicator,
+.sidewing-bar .composited-indicator label,
+.sidewing-bar .composited-indicator-label {
+    font-weight: bold;
+}
+
+.composited-indicator image {
+    -gtk-icon-shadow:
+        0 0 2px alpha(black, 0.3),
+        0 1px 2px alpha(black, 0.6);
+}
+
+window.sidewing-window:backdrop .composited-indicator,
+window.sidewing-window:backdrop .composited-indicator label,
+window.sidewing-window:backdrop .composited-indicator image,
+window.sidewing-window:backdrop .composited-indicator-label,
+.sidewing-bar:backdrop .composited-indicator,
+.sidewing-bar:backdrop .composited-indicator label,
+.sidewing-bar:backdrop .composited-indicator image,
+.sidewing-bar:backdrop .composited-indicator-label {
+    color: rgba(255, 255, 255, 0.96);
+    filter: none;
+    opacity: 1;
+    text-shadow:
+        0 0 2px alpha(black, 0.3),
+        0 1px 2px alpha(black, 0.6);
+}
+
+window.sidewing-window:backdrop button.composited-indicator,
+window.sidewing-window:backdrop menubutton.composited-indicator,
+button.composited-indicator:backdrop,
+menubutton.composited-indicator:backdrop {
+    color: rgba(255, 255, 255, 0.96);
+    background: transparent;
+    background-image: none;
+    box-shadow: none;
+    filter: none;
+    opacity: 1;
+}
+
+window.sidewing-window:backdrop .sidewing-bar label,
+window.sidewing-window:backdrop .sidewing-bar image,
+window.sidewing-window:backdrop .sidewing-bar button,
+window.sidewing-window:backdrop .sidewing-bar button label,
+window.sidewing-window:backdrop .sidewing-bar menubutton,
+window.sidewing-window:backdrop .sidewing-bar menubutton label,
+.sidewing-bar:backdrop label,
+.sidewing-bar:backdrop image,
+.sidewing-bar:backdrop button,
+.sidewing-bar:backdrop button label,
+.sidewing-bar:backdrop menubutton,
+.sidewing-bar:backdrop menubutton label {
+    color: rgba(255, 255, 255, 0.96);
+    filter: none;
+    opacity: 1;
+}
+
+window.sidewing-window:backdrop .composited-indicator image,
+.sidewing-bar:backdrop .composited-indicator image {
+    -gtk-icon-shadow:
+        0 0 2px alpha(black, 0.3),
+        0 1px 2px alpha(black, 0.6);
+}
+
+.sidewing-item:hover {
+    background: rgba(255, 255, 255, 0.10);
+    color: #f2f4f8;
+}
+
+.sidewing-item:hover label {
+    color: #f2f4f8;
+}
+
+popover contents,
+.sidewing-menu {
+    background: rgba(33, 35, 40, 0.98);
+    color: rgba(255, 255, 255, 0.94);
+    border-radius: 10px;
+}
+
+.sidewing-menu-item {
+    min-height: 26px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.94);
+}
+
+.sidewing-menu-item:hover {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.warning {
+    color: #ffb36b;
+}

@@ -10,12 +10,18 @@ namespace Sidewing {
         private X.Atom net_wm_window_type_normal_atom;
         private X.Atom net_wm_strut_atom;
         private X.Atom net_wm_strut_partial_atom;
+        private X.Atom net_active_window_atom;
+        private X.Atom net_wm_state_atom;
+        private X.Atom net_wm_state_maximized_vert_atom;
+        private X.Atom net_wm_state_maximized_horz_atom;
         private Gtk.Box bar_frame;
         private Gtk.Box items_box;
         private Gtk.MenuButton settings_button;
         private Gee.ArrayList<Gtk.MenuButton> plugin_buttons;
         private Gee.HashMap<string, Gtk.MenuButton> buttons_by_plugin_path;
         private int last_applied_bar_height = -1;
+        private bool has_maximized_window_on_monitor = false;
+        private uint maximized_window_poll_id = 0;
 
         public BarWindow(
             Gtk.Application app,
@@ -39,26 +45,34 @@ namespace Sidewing {
             default_width = 800;
             add_css_class("sidewing-window");
 
-            items_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 6);
-            items_box.margin_start = 12;
-            items_box.margin_top = 6;
-            items_box.margin_bottom = 6;
+            items_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 4);
+            items_box.margin_start = 8;
+            items_box.margin_top = 2;
+            items_box.margin_bottom = 2;
             items_box.hexpand = true;
 
             var settings_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
-            settings_box.margin_end = 12;
-            settings_box.margin_top = 6;
-            settings_box.margin_bottom = 6;
+            settings_box.margin_end = 8;
+            settings_box.margin_top = 2;
+            settings_box.margin_bottom = 2;
 
             settings_button = new Gtk.MenuButton();
             settings_button.valign = Gtk.Align.CENTER;
             settings_button.add_css_class("flat");
             settings_button.add_css_class("sidewing-item");
+            settings_button.add_css_class("composited-indicator");
             settings_button.set_has_frame(false);
             settings_button.set_always_show_arrow(false);
             settings_button.set_direction(Gtk.ArrowType.NONE);
             settings_button.tooltip_text = "Settings";
             settings_button.set_popover(menu_builder.build_app_menu());
+
+            var settings_click = new Gtk.GestureClick();
+            settings_click.set_button(Gdk.BUTTON_PRIMARY);
+            settings_click.pressed.connect((n_press, x, y) => {
+                popdown_other_buttons(settings_button);
+            });
+            settings_button.add_controller(settings_click);
 
             var settings_icon = new Gtk.Image.from_icon_name("emblem-system-symbolic");
             settings_button.set_child(settings_icon);
@@ -77,6 +91,7 @@ namespace Sidewing {
             update_monitor_binding();
             bind_window_state();
             bind_plugin_manager();
+            sync_bar_background_mode();
         }
 
         public void queue_placement() {
@@ -108,6 +123,7 @@ namespace Sidewing {
             map.connect(() => {
                 log_service.info("Bar window mapped; reapplying X11 placement and window role");
                 queue_placement();
+                start_maximized_window_tracking();
             });
 
             notify["is-active"].connect(() => {
@@ -120,6 +136,11 @@ namespace Sidewing {
             settings_store.stacking_preferences_changed.connect(() => {
                 log_service.info("Stacking preference changed; reapplying X11 placement");
                 queue_placement();
+            });
+
+            close_request.connect(() => {
+                stop_maximized_window_tracking();
+                return false;
             });
         }
 
@@ -163,6 +184,7 @@ namespace Sidewing {
             button.valign = Gtk.Align.CENTER;
             button.add_css_class("flat");
             button.add_css_class("sidewing-item");
+            button.add_css_class("composited-indicator");
             button.set_has_frame(false);
             button.set_always_show_arrow(false);
             button.set_direction(Gtk.ArrowType.NONE);
@@ -170,6 +192,7 @@ namespace Sidewing {
 
             var title = new Gtk.Label(label);
             title.add_css_class("sidewing-item-label");
+            title.add_css_class("composited-indicator-label");
             title.ellipsize = Pango.EllipsizeMode.END;
             button.set_child(title);
 
@@ -189,6 +212,7 @@ namespace Sidewing {
             var label = new Gtk.Label(title);
             label.halign = Gtk.Align.START;
             label.add_css_class("sidewing-item");
+            label.add_css_class("composited-indicator");
             items_box.append(label);
         }
 
@@ -277,6 +301,10 @@ namespace Sidewing {
             net_wm_window_type_normal_atom = x11_display.get_xatom_by_name("_NET_WM_WINDOW_TYPE_NORMAL");
             net_wm_strut_atom = x11_display.get_xatom_by_name("_NET_WM_STRUT");
             net_wm_strut_partial_atom = x11_display.get_xatom_by_name("_NET_WM_STRUT_PARTIAL");
+            net_active_window_atom = x11_display.get_xatom_by_name("_NET_ACTIVE_WINDOW");
+            net_wm_state_atom = x11_display.get_xatom_by_name("_NET_WM_STATE");
+            net_wm_state_maximized_vert_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_VERT");
+            net_wm_state_maximized_horz_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_HORZ");
         }
 
         private void apply_x11_window_role(X.Display xdisplay, X.Window xid, MonitorInfo monitor, int bar_height) {
@@ -394,7 +422,208 @@ namespace Sidewing {
             xdisplay.flush();
         }
 
+        private void start_maximized_window_tracking() {
+            if (maximized_window_poll_id != 0) {
+                return;
+            }
+
+            update_bar_background_mode();
+            maximized_window_poll_id = Timeout.add(250, () => {
+                update_bar_background_mode();
+                return Source.CONTINUE;
+            });
+        }
+
+        private void stop_maximized_window_tracking() {
+            if (maximized_window_poll_id == 0) {
+                return;
+            }
+
+            Source.remove(maximized_window_poll_id);
+            maximized_window_poll_id = 0;
+        }
+
+        private void update_bar_background_mode() {
+            var monitor = monitor_manager.get_selected_monitor(settings_store.selected_monitor_id);
+            var display = Gdk.Display.get_default();
+            var x11_display = display as Gdk.X11.Display;
+
+            if (monitor == null || x11_display == null) {
+                set_has_maximized_window_on_monitor(false);
+                return;
+            }
+
+            unowned X.Display xdisplay = x11_display.get_xdisplay();
+            cache_net_wm_atoms(x11_display);
+            set_has_maximized_window_on_monitor(
+                active_window_is_maximized_on_monitor(xdisplay, monitor)
+            );
+        }
+
+        private bool active_window_is_maximized_on_monitor(X.Display xdisplay, MonitorInfo monitor) {
+            X.Window? active_window = read_window_property(
+                xdisplay,
+                xdisplay.default_root_window(),
+                net_active_window_atom
+            );
+            if (active_window == null || active_window == 0) {
+                return false;
+            }
+
+            if (!window_has_atom_state(xdisplay, active_window, net_wm_state_maximized_vert_atom)) {
+                return false;
+            }
+
+            if (!window_has_atom_state(xdisplay, active_window, net_wm_state_maximized_horz_atom)) {
+                return false;
+            }
+
+            return window_is_on_monitor(xdisplay, active_window, monitor);
+        }
+
+        private X.Window? read_window_property(X.Display xdisplay, X.Window window, X.Atom property_atom) {
+            X.Atom actual_type;
+            int actual_format;
+            ulong nitems;
+            ulong bytes_after;
+            void* data = null;
+
+            int result = xdisplay.get_window_property(
+                window,
+                property_atom,
+                0,
+                1,
+                false,
+                (X.Atom) X.ANY_PROPERTY_TYPE,
+                out actual_type,
+                out actual_format,
+                out nitems,
+                out bytes_after,
+                out data
+            );
+
+            if (result != X.Success || data == null || actual_format != 32 || nitems == 0) {
+                if (data != null) {
+                    X.free(data);
+                }
+                return null;
+            }
+
+            X.Window active_window = ((ulong*) data)[0];
+            X.free(data);
+            return active_window;
+        }
+
+        private bool window_has_atom_state(X.Display xdisplay, X.Window window, X.Atom expected_atom) {
+            X.Atom actual_type;
+            int actual_format;
+            ulong nitems;
+            ulong bytes_after;
+            void* data = null;
+
+            int result = xdisplay.get_window_property(
+                window,
+                net_wm_state_atom,
+                0,
+                32,
+                false,
+                X.XA_ATOM,
+                out actual_type,
+                out actual_format,
+                out nitems,
+                out bytes_after,
+                out data
+            );
+
+            if (result != X.Success || data == null || actual_format != 32 || nitems == 0) {
+                if (data != null) {
+                    X.free(data);
+                }
+                return false;
+            }
+
+            bool found = false;
+            ulong* atoms = (ulong*) data;
+            for (ulong i = 0; i < nitems; i++) {
+                if ((X.Atom) atoms[i] == expected_atom) {
+                    found = true;
+                    break;
+                }
+            }
+
+            X.free(data);
+            return found;
+        }
+
+        private bool window_is_on_monitor(X.Display xdisplay, X.Window window, MonitorInfo monitor) {
+            int root_x;
+            int root_y;
+            X.Window child_return;
+
+            bool translated = xdisplay.translate_coordinates(
+                window,
+                xdisplay.default_root_window(),
+                0,
+                0,
+                out root_x,
+                out root_y,
+                out child_return
+            );
+            if (!translated) {
+                return false;
+            }
+
+            X.Window root_return;
+            int unused_x;
+            int unused_y;
+            uint width;
+            uint height;
+            uint border_width;
+            uint depth;
+            xdisplay.get_geometry(
+                window,
+                out root_return,
+                out unused_x,
+                out unused_y,
+                out width,
+                out height,
+                out border_width,
+                out depth
+            );
+
+            int horizontal_overlap = int.min(root_x + (int) width, monitor.x + monitor.width) - int.max(root_x, monitor.x);
+            int vertical_overlap = int.min(root_y + (int) height, monitor.y + monitor.height) - int.max(root_y, monitor.y);
+
+            return horizontal_overlap > 0 && vertical_overlap > 0;
+        }
+
+        private void set_has_maximized_window_on_monitor(bool value) {
+            if (has_maximized_window_on_monitor == value) {
+                return;
+            }
+
+            has_maximized_window_on_monitor = value;
+            sync_bar_background_mode();
+            log_service.info(
+                value
+                    ? "Active maximized window detected on selected monitor; using opaque bar background"
+                    : "No active maximized window on selected monitor; using translucent bar background"
+            );
+        }
+
+        private void sync_bar_background_mode() {
+            if (has_maximized_window_on_monitor) {
+                bar_frame.add_css_class("sidewing-bar-opaque");
+            } else {
+                bar_frame.remove_css_class("sidewing-bar-opaque");
+            }
+        }
+
         private void popdown_other_buttons(Gtk.MenuButton active_button) {
+            if (settings_button != active_button) {
+                settings_button.popdown();
+            }
+
             foreach (var button in plugin_buttons) {
                 if (button != active_button) {
                     button.popdown();
@@ -403,6 +632,8 @@ namespace Sidewing {
         }
 
         private void close_all_menus() {
+            settings_button.popdown();
+
             foreach (var button in plugin_buttons) {
                 button.popdown();
             }

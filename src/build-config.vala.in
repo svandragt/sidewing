@@ -1,3 +1,4 @@
 namespace Sidewing.Build {
     public const string PROJECT_SOURCE_ROOT = @PROJECT_SOURCE_ROOT@;
+    public const string APPLICATION_CSS_PATH = @APPLICATION_CSS_PATH@;
 }
