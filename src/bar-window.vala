@@ -49,17 +49,17 @@ namespace Sidewing {
 
             items_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 4);
             items_box.margin_start = 8;
-            items_box.margin_top = 2;
+            items_box.margin_top = 0;
             items_box.margin_bottom = 2;
             items_box.hexpand = true;
 
             var settings_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
             settings_box.margin_end = 8;
-            settings_box.margin_top = 2;
+            settings_box.margin_top = 0;
             settings_box.margin_bottom = 2;
 
             settings_button = new Gtk.MenuButton();
-            settings_button.valign = Gtk.Align.CENTER;
+            settings_button.valign = Gtk.Align.FILL;
             settings_button.add_css_class("flat");
             settings_button.add_css_class("sidewing-item");
             settings_button.add_css_class("composited-indicator");
@@ -183,7 +183,7 @@ namespace Sidewing {
                 label = record.definition.display_name;
             }
 
-            button.valign = Gtk.Align.CENTER;
+            button.valign = Gtk.Align.FILL;
             button.add_css_class("flat");
             button.add_css_class("sidewing-item");
             button.add_css_class("composited-indicator");
