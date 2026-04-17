@@ -84,8 +84,9 @@ The bar:
 
 - spans the width of the selected monitor
 - has a fixed height
-- reserves no exclusive screen space in MVP unless straightforward on X11
+- can reserve top-edge screen space for maximized windows on X11 when the user enables that behavior
 - can optionally auto-hide in a future release
+- tracks maximized-window state on the selected monitor so the bar can switch between translucent and opaque styling
 
 ### 2. Plugin
 
@@ -167,6 +168,7 @@ Menus should:
 
 - appear directly below the clicked plugin item
 - close when focus is lost or escape is pressed
+- close when the bar window loses X11 focus so stale popovers do not remain open
 - support separators
 - support nested submenus
 - support disabled items
@@ -198,6 +200,8 @@ Current MVP delivery note:
 - The app menu currently exposes user-level desktop integration actions rather than a full settings window.
 - Desktop entry installation writes `com.vandragt.sidewing.desktop` under `~/.local/share/applications/`.
 - Autostart toggling writes the corresponding XDG autostart entry under `~/.config/autostart/`.
+- X11 stacking preferences currently include an option to reserve top-edge space for maximized windows.
+- The bar background becomes opaque when the selected monitor has a maximized window and translucent otherwise.
 
 ## Bundled Example Plugins
 

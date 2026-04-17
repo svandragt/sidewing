@@ -23,7 +23,9 @@ The current codebase is an MVP-in-progress. It already discovers and runs plugin
 - Adds a right-aligned app menu with plugin-folder, desktop-entry, autostart, reserve-space, and refresh-all actions
 - Seeds the user plugin directory with bundled example plugins on first launch
 - Prefers a non-primary monitor and falls back to the primary monitor if needed
-- Uses a Wingpanel-inspired translucent bar that becomes opaque when the active window on that monitor is maximized
+- Uses a Wingpanel-inspired translucent bar that becomes opaque when the selected monitor has a maximized window
+- Dismisses open plugin menus when the bar loses focus so popovers do not linger on X11
+- Extends plugin and settings button hit targets to the top edge of the bar for easier pointer access
 
 ## Current Limitations
 
@@ -35,6 +37,7 @@ The implementation is narrower than the long-term spec.
 - Unsupported xbar metadata is ignored
 - Only the first bar line is shown as the visible title
 - Plugin variables are loaded from `<plugin>.vars.json`; there is no in-app variables editor yet
+- Maximized-window tracking, focus-loss menu dismissal, and reserve-space behavior are implemented for X11 only
 
 ## Build Requirements
 
@@ -88,6 +91,8 @@ From the bar app menu you can:
 - enable or disable autostart for the current user session
 - toggle whether the bar should reserve space for maximized windows on X11
 - refresh all plugins
+
+On X11, Sidewing also detects whether the selected monitor currently has a maximized window. That state is checked when the bar appears and then polled periodically so the bar can switch between its translucent and opaque styles as window state changes.
 
 ## Plugin Naming
 
@@ -208,4 +213,3 @@ Related design and planning docs:
 
 - [`docs/sidewing-spec.md`](./docs/sidewing-spec.md)
 - [`docs/implementation-plan.md`](./docs/implementation-plan.md)
-- [`docs/TODO.md`](./docs/TODO.md)
