@@ -22,6 +22,7 @@ namespace Sidewing {
         private Gee.HashMap<string, Gtk.MenuButton> buttons_by_plugin_path;
         private int last_applied_bar_height = -1;
         private bool has_maximized_window_on_monitor = false;
+        private bool has_x11_focus = false;
         private uint maximized_window_poll_id = 0;
 
         public BarWindow(
@@ -429,9 +430,9 @@ namespace Sidewing {
                 return;
             }
 
-            update_bar_background_mode();
+            update_tracked_window_state();
             maximized_window_poll_id = Timeout.add(250, () => {
-                update_bar_background_mode();
+                update_tracked_window_state();
                 return Source.CONTINUE;
             });
         }
@@ -451,15 +452,21 @@ namespace Sidewing {
             var x11_display = display as Gdk.X11.Display;
 
             if (monitor == null || x11_display == null) {
+                update_x11_focus_state(false);
                 set_has_maximized_window_on_monitor(false);
                 return;
             }
 
             unowned X.Display xdisplay = x11_display.get_xdisplay();
             cache_net_wm_atoms(x11_display);
+            update_x11_focus_state(window_is_active(xdisplay, get_own_x11_window()));
             set_has_maximized_window_on_monitor(
                 active_window_is_maximized_on_monitor(xdisplay, monitor)
             );
+        }
+
+        private void update_tracked_window_state() {
+            update_bar_background_mode();
         }
 
         private bool active_window_is_maximized_on_monitor(X.Display xdisplay, MonitorInfo monitor) {
@@ -480,6 +487,20 @@ namespace Sidewing {
                 own_window
             );
             return stacked_window != null;
+        }
+
+        private bool window_is_active(X.Display xdisplay, X.Window? window) {
+            if (window == null || window == 0) {
+                return false;
+            }
+
+            X.Window? active_window = read_window_property(
+                xdisplay,
+                xdisplay.default_root_window(),
+                net_active_window_atom
+            );
+
+            return active_window != null && active_window == window;
         }
 
         private X.Window? find_topmost_maximized_window_on_monitor(
@@ -692,6 +713,18 @@ namespace Sidewing {
                 bar_frame.add_css_class("sidewing-bar-opaque");
             } else {
                 bar_frame.remove_css_class("sidewing-bar-opaque");
+            }
+        }
+
+        private void update_x11_focus_state(bool focused) {
+            if (has_x11_focus == focused) {
+                return;
+            }
+
+            has_x11_focus = focused;
+            if (!focused) {
+                log_service.info("Bar window lost X11 focus; dismissing open menus");
+                close_all_menus();
             }
         }
 
