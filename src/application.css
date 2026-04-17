@@ -133,6 +133,10 @@ popover contents,
     color: rgba(255, 255, 255, 0.94);
 }
 
+.sidewing-menu-item > label {
+    text-align: left;
+}
+
 .sidewing-menu-item:hover {
     background: rgba(255, 255, 255, 0.10);
 }

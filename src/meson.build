@@ -15,6 +15,7 @@ sidewing_sources = [
 sidewing_sources += files(
   'main.vala',
   'application.vala',
+  'cli-runner.vala',
   'models.vala',
   'bar-window.vala',
   'monitor-manager.vala',

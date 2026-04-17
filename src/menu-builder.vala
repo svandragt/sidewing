@@ -102,6 +102,7 @@ namespace Sidewing {
             open_plugins_button.add_css_class("flat");
             open_plugins_button.add_css_class("sidewing-menu-item");
             open_plugins_button.set_can_focus(false);
+            align_button_label(open_plugins_button);
             open_plugins_button.clicked.connect(() => {
                 action_dispatcher.open_directory(settings_store.plugins_dir);
             });
@@ -123,6 +124,7 @@ namespace Sidewing {
             install_desktop_button.add_css_class("flat");
             install_desktop_button.add_css_class("sidewing-menu-item");
             install_desktop_button.set_can_focus(false);
+            align_button_label(install_desktop_button);
             install_desktop_button.clicked.connect(() => {
                 desktop_integration.install_desktop_entry();
                 populate_app_menu(popover);
@@ -150,6 +152,7 @@ namespace Sidewing {
             refresh_all_button.add_css_class("flat");
             refresh_all_button.add_css_class("sidewing-menu-item");
             refresh_all_button.set_can_focus(false);
+            align_button_label(refresh_all_button);
             refresh_all_button.clicked.connect(() => {
                 plugin_manager.refresh_all();
             });
@@ -175,6 +178,7 @@ namespace Sidewing {
             button.add_css_class("flat");
             button.add_css_class("sidewing-menu-item");
             button.set_can_focus(false);
+            align_button_label(button);
 
             if (item.depth > 0) {
                 button.margin_start = (int) item.depth * 14;
@@ -236,6 +240,14 @@ namespace Sidewing {
         }
 
         private delegate void ToggleHandler(bool state);
+
+        private void align_button_label(Gtk.Button button) {
+            var child = button.get_child();
+            var label = child as Gtk.Label;
+            if (label != null) {
+                label.xalign = 0.0f;
+            }
+        }
 
         private Gtk.Label build_info_label(string text) {
             var label = new Gtk.Label(text);
