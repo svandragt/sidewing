@@ -18,7 +18,7 @@ Notes:
 - The public IP example uses `https://api.ipify.org`; network failure is handled as a normal plugin error state.
 - Variable-backed plugins get a `<plugin>.vars.json` sidecar created next to the plugin when Sidewing discovers them.
 
-To try them manually:
+To try them manually by executing the scripts directly:
 
 ```sh
 chmod +x examples/plugins/*.sh
@@ -29,3 +29,12 @@ chmod +x examples/plugins/*.sh
 ./examples/plugins/github-assigned-prs.5m.sh
 ./examples/plugins/variable-demo.1m.sh
 ```
+
+To run one through Sidewing's CLI runner:
+
+```sh
+meson compile -C build
+./build/src/sidewing run examples/plugins/action-demo.30s.sh
+```
+
+You can pass either a path like `examples/plugins/action-demo.30s.sh` or a plugin filename from `~/.local/share/sidewing/plugins/`.
