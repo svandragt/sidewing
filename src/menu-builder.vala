@@ -45,7 +45,7 @@ namespace Sidewing {
                 popover.set_child(null);
             }
 
-            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 6);
+            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
             box.margin_start = 12;
             box.margin_end = 12;
             box.margin_top = 12;
@@ -54,6 +54,7 @@ namespace Sidewing {
 
             var heading = new Gtk.Label(record.definition.display_name);
             heading.halign = Gtk.Align.START;
+            heading.margin_bottom = 6;
             heading.add_css_class("heading");
 
             box.append(heading);
@@ -67,7 +68,10 @@ namespace Sidewing {
             }
 
             if (record.state.warnings.size > 0) {
-                box.append(new Gtk.Separator(Gtk.Orientation.HORIZONTAL));
+                var separator = new Gtk.Separator(Gtk.Orientation.HORIZONTAL);
+                separator.margin_top = 6;
+                separator.margin_bottom = 6;
+                box.append(separator);
                 foreach (var warning_text in record.state.warnings) {
                     var warning = build_info_label(warning_text);
                     warning.add_css_class("warning");
@@ -84,7 +88,7 @@ namespace Sidewing {
                 popover.set_child(null);
             }
 
-            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 6);
+            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
             box.margin_start = 12;
             box.margin_end = 12;
             box.margin_top = 12;
@@ -93,6 +97,7 @@ namespace Sidewing {
 
             var heading = new Gtk.Label("Sidewing");
             heading.halign = Gtk.Align.START;
+            heading.margin_bottom = 6;
             heading.add_css_class("heading");
             box.append(heading);
 
