@@ -11,6 +11,7 @@ namespace Sidewing {
         private X.Atom net_wm_strut_atom;
         private X.Atom net_wm_strut_partial_atom;
         private X.Atom net_active_window_atom;
+        private X.Atom net_client_list_stacking_atom;
         private X.Atom net_wm_state_atom;
         private X.Atom net_wm_state_maximized_vert_atom;
         private X.Atom net_wm_state_maximized_horz_atom;
@@ -302,6 +303,7 @@ namespace Sidewing {
             net_wm_strut_atom = x11_display.get_xatom_by_name("_NET_WM_STRUT");
             net_wm_strut_partial_atom = x11_display.get_xatom_by_name("_NET_WM_STRUT_PARTIAL");
             net_active_window_atom = x11_display.get_xatom_by_name("_NET_ACTIVE_WINDOW");
+            net_client_list_stacking_atom = x11_display.get_xatom_by_name("_NET_CLIENT_LIST_STACKING");
             net_wm_state_atom = x11_display.get_xatom_by_name("_NET_WM_STATE");
             net_wm_state_maximized_vert_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_VERT");
             net_wm_state_maximized_horz_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_HORZ");
@@ -461,24 +463,60 @@ namespace Sidewing {
         }
 
         private bool active_window_is_maximized_on_monitor(X.Display xdisplay, MonitorInfo monitor) {
+            X.Window? own_window = get_own_x11_window();
             X.Window? active_window = read_window_property(
                 xdisplay,
                 xdisplay.default_root_window(),
                 net_active_window_atom
             );
-            if (active_window == null || active_window == 0) {
+
+            if (active_window != null && active_window != 0 && active_window != own_window) {
+                return window_is_maximized_on_monitor(xdisplay, active_window, monitor);
+            }
+
+            X.Window? stacked_window = find_topmost_maximized_window_on_monitor(
+                xdisplay,
+                monitor,
+                own_window
+            );
+            return stacked_window != null;
+        }
+
+        private X.Window? find_topmost_maximized_window_on_monitor(
+            X.Display xdisplay,
+            MonitorInfo monitor,
+            X.Window? ignored_window
+        ) {
+            var windows = read_window_list_property(
+                xdisplay,
+                xdisplay.default_root_window(),
+                net_client_list_stacking_atom
+            );
+
+            for (int i = windows.length - 1; i >= 0; i--) {
+                X.Window window = windows[i];
+                if (window == 0 || window == ignored_window) {
+                    continue;
+                }
+
+                if (window_is_maximized_on_monitor(xdisplay, window, monitor)) {
+                    return window;
+                }
+            }
+
+            return null;
+        }
+
+        private bool window_is_maximized_on_monitor(X.Display xdisplay, X.Window window, MonitorInfo monitor) {
+            if (!window_has_atom_state(xdisplay, window, net_wm_state_maximized_vert_atom)) {
                 return false;
             }
 
-            if (!window_has_atom_state(xdisplay, active_window, net_wm_state_maximized_vert_atom)) {
+            if (!window_has_atom_state(xdisplay, window, net_wm_state_maximized_horz_atom)) {
                 return false;
             }
 
-            if (!window_has_atom_state(xdisplay, active_window, net_wm_state_maximized_horz_atom)) {
-                return false;
-            }
-
-            return window_is_on_monitor(xdisplay, active_window, monitor);
+            return window_is_on_monitor(xdisplay, window, monitor);
         }
 
         private X.Window? read_window_property(X.Display xdisplay, X.Window window, X.Atom property_atom) {
@@ -512,6 +550,44 @@ namespace Sidewing {
             X.Window active_window = ((ulong*) data)[0];
             X.free(data);
             return active_window;
+        }
+
+        private X.Window[] read_window_list_property(X.Display xdisplay, X.Window window, X.Atom property_atom) {
+            X.Atom actual_type;
+            int actual_format;
+            ulong nitems;
+            ulong bytes_after;
+            void* data = null;
+
+            int result = xdisplay.get_window_property(
+                window,
+                property_atom,
+                0,
+                4096,
+                false,
+                (X.Atom) X.ANY_PROPERTY_TYPE,
+                out actual_type,
+                out actual_format,
+                out nitems,
+                out bytes_after,
+                out data
+            );
+
+            if (result != X.Success || data == null || actual_format != 32 || nitems == 0) {
+                if (data != null) {
+                    X.free(data);
+                }
+                return {};
+            }
+
+            var windows = new X.Window[(int) nitems];
+            ulong* items = (ulong*) data;
+            for (ulong i = 0; i < nitems; i++) {
+                windows[(int) i] = (X.Window) items[i];
+            }
+
+            X.free(data);
+            return windows;
         }
 
         private bool window_has_atom_state(X.Display xdisplay, X.Window window, X.Atom expected_atom) {
@@ -617,6 +693,16 @@ namespace Sidewing {
             } else {
                 bar_frame.remove_css_class("sidewing-bar-opaque");
             }
+        }
+
+        private X.Window? get_own_x11_window() {
+            var surface = get_surface();
+            var x11_surface = surface as Gdk.X11.Surface;
+            if (x11_surface == null) {
+                return null;
+            }
+
+            return x11_surface.get_xid();
         }
 
         private void popdown_other_buttons(Gtk.MenuButton active_button) {
