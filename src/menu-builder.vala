@@ -109,6 +109,7 @@ namespace Sidewing {
             open_plugins_button.set_can_focus(false);
             align_button_label(open_plugins_button);
             open_plugins_button.clicked.connect(() => {
+                dismiss_enclosing_popover(open_plugins_button);
                 action_dispatcher.open_directory(settings_store.plugins_dir);
             });
             box.append(open_plugins_button);
@@ -146,6 +147,7 @@ namespace Sidewing {
             reload_button.set_can_focus(false);
             align_button_label(reload_button);
             reload_button.clicked.connect(() => {
+                dismiss_enclosing_popover(reload_button);
                 plugin_manager.reload();
             });
             box.append(reload_button);
@@ -177,6 +179,7 @@ namespace Sidewing {
             }
 
             button.clicked.connect(() => {
+                dismiss_enclosing_popover(button);
                 if (item.shell_command != null && item.shell_command != "") {
                     action_dispatcher.execute_command(
                         item.shell_command,
@@ -238,6 +241,14 @@ namespace Sidewing {
             var label = child as Gtk.Label;
             if (label != null) {
                 label.xalign = 0.0f;
+            }
+        }
+
+        private void dismiss_enclosing_popover(Gtk.Widget widget) {
+            var ancestor = widget.get_ancestor(typeof(Gtk.Popover));
+            var popover = ancestor as Gtk.Popover;
+            if (popover != null) {
+                popover.popdown();
             }
         }
 

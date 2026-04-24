@@ -459,10 +459,52 @@ namespace Sidewing {
 
             unowned X.Display xdisplay = x11_display.get_xdisplay();
             cache_net_wm_atoms(x11_display);
-            update_x11_focus_state(window_is_active(xdisplay, get_own_x11_window()));
+            bool owned_active = any_owned_window_is_active(xdisplay);
+            update_x11_focus_state(owned_active);
+            dismiss_menus_if_focus_elsewhere(owned_active);
             set_has_maximized_window_on_monitor(
                 active_window_is_maximized_on_monitor(xdisplay, monitor)
             );
+        }
+
+        private X.Window? active_window_at_popover_open = null;
+        private bool popovers_were_open = false;
+
+        private void dismiss_menus_if_focus_elsewhere(bool owned_active) {
+            var open_popovers = collect_open_popover_xids();
+            if (open_popovers.size == 0) {
+                popovers_were_open = false;
+                active_window_at_popover_open = null;
+                return;
+            }
+
+            var display = Gdk.Display.get_default() as Gdk.X11.Display;
+            if (display == null) {
+                return;
+            }
+            unowned X.Display xdisplay = display.get_xdisplay();
+            X.Window? current_active = read_window_property(
+                xdisplay,
+                xdisplay.default_root_window(),
+                net_active_window_atom
+            );
+
+            if (!popovers_were_open) {
+                popovers_were_open = true;
+                active_window_at_popover_open = current_active;
+                return;
+            }
+
+            if (owned_active) {
+                return;
+            }
+
+            if (current_active == active_window_at_popover_open) {
+                return;
+            }
+
+            log_service.info("Active window changed while popover was open; dismissing open menus");
+            close_all_menus();
         }
 
         private void update_tracked_window_state() {
@@ -489,21 +531,56 @@ namespace Sidewing {
             return stacked_window != null;
         }
 
-        private bool window_is_active(X.Display xdisplay, X.Window? window) {
-            if (window == null || window == 0) {
-                return false;
-            }
-
+        private bool any_owned_window_is_active(X.Display xdisplay) {
             X.Window? active_window = read_window_property(
                 xdisplay,
                 xdisplay.default_root_window(),
                 net_active_window_atom
             );
 
-            return active_window != null && active_window == window;
+            if (active_window == null || active_window == 0) {
+                return false;
+            }
+
+            X.Window? own = get_own_x11_window();
+            if (own != null && active_window == own) {
+                return true;
+            }
+
+            foreach (var xid in collect_open_popover_xids()) {
+                if (active_window == xid) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        private X.Window? find_topmost_maximized_window_on_monitor(
+        private Gee.ArrayList<X.Window?> collect_open_popover_xids() {
+            var result = new Gee.ArrayList<X.Window?>();
+            add_popover_xid(result, settings_button);
+            foreach (var button in plugin_buttons) {
+                add_popover_xid(result, button);
+            }
+            return result;
+        }
+
+        private void add_popover_xid(Gee.ArrayList<X.Window?> result, Gtk.MenuButton button) {
+            var popover = button.get_popover();
+            if (popover == null || !popover.get_visible()) {
+                return;
+            }
+
+            var surface = popover.get_native() != null ? popover.get_native().get_surface() : null;
+            var x11_surface = surface as Gdk.X11.Surface;
+            if (x11_surface == null) {
+                return;
+            }
+
+            result.add(x11_surface.get_xid());
+        }
+
+private X.Window? find_topmost_maximized_window_on_monitor(
             X.Display xdisplay,
             MonitorInfo monitor,
             X.Window? ignored_window
@@ -722,10 +799,6 @@ namespace Sidewing {
             }
 
             has_x11_focus = focused;
-            if (!focused) {
-                log_service.info("Bar window lost X11 focus; dismissing open menus");
-                close_all_menus();
-            }
         }
 
         private X.Window? get_own_x11_window() {
