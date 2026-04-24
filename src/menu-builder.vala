@@ -123,19 +123,6 @@ namespace Sidewing {
             );
             box.append(reserve_space_row);
 
-            var install_desktop_button = new Gtk.Button.with_label("Install Desktop Entry");
-            install_desktop_button.halign = Gtk.Align.FILL;
-            install_desktop_button.hexpand = true;
-            install_desktop_button.add_css_class("flat");
-            install_desktop_button.add_css_class("sidewing-menu-item");
-            install_desktop_button.set_can_focus(false);
-            align_button_label(install_desktop_button);
-            install_desktop_button.clicked.connect(() => {
-                desktop_integration.install_desktop_entry();
-                populate_app_menu(popover);
-            });
-            box.append(install_desktop_button);
-
             var autostart_row = build_menu_switch_row(
                 "Autostart on Login",
                 desktop_integration.is_autostart_enabled(),

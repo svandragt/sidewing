@@ -46,7 +46,14 @@ namespace Sidewing {
             }
 
             settings_store = new SettingsStore();
-            log_service = new LogService();
+            string log_path = Path.build_filename(
+                Environment.get_user_data_dir(),
+                "sidewing",
+                "sidewing.log"
+            );
+            log_service = new LogService(true, log_path);
+            install_glib_log_handler();
+            install_signal_handlers();
             variables_store = new VariablesStore(log_service);
             desktop_integration = new DesktopIntegration(log_service);
             settings_store.ensure_plugins_dir_seeded(log_service);
@@ -65,6 +72,36 @@ namespace Sidewing {
             load_css();
 
             log_service.info("Sidewing initialized");
+        }
+
+        private void install_glib_log_handler() {
+            Log.set_default_handler((domain, level, message) => {
+                string prefix = domain != null ? @"[$domain] " : "";
+                string text = prefix + (message ?? "");
+                if ((level & (LogLevelFlags.LEVEL_CRITICAL | LogLevelFlags.LEVEL_ERROR | LogLevelFlags.LEVEL_WARNING)) != 0) {
+                    log_service.warning(text);
+                } else {
+                    log_service.info(text);
+                }
+            });
+        }
+
+        private void install_signal_handlers() {
+            Unix.signal_add(15, () => {
+                log_service.info("Received SIGTERM, quitting");
+                this.quit();
+                return Source.REMOVE;
+            });
+            Unix.signal_add(2, () => {
+                log_service.info("Received SIGINT, quitting");
+                this.quit();
+                return Source.REMOVE;
+            });
+            Unix.signal_add(1, () => {
+                log_service.info("Received SIGHUP, quitting");
+                this.quit();
+                return Source.REMOVE;
+            });
         }
 
         private void load_css() {
