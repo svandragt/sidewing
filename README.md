@@ -91,7 +91,7 @@ From the bar app menu you can:
 - install a user desktop entry
 - enable or disable autostart for the current user session
 - toggle whether the bar should reserve space for maximized windows on X11
-- refresh all plugins
+- reload (rediscover the plugins directory and refresh all plugins)
 
 On X11, Sidewing also detects whether the selected monitor currently has a maximized window. That state is checked when the bar appears and then polled periodically so the bar can switch between its translucent and opaque styles as window state changes.
 

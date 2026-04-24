@@ -48,6 +48,11 @@ namespace Sidewing {
             }
         }
 
+        public void reload() {
+            log_service.info("Reloading plugins (rediscovering plugin directory)");
+            start();
+        }
+
         public void refresh_all() {
             log_service.info(@"Refreshing all plugins ($(plugin_records.size))");
             foreach (var record in plugin_records) {

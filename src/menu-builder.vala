@@ -151,17 +151,17 @@ namespace Sidewing {
             );
             box.append(autostart_row);
 
-            var refresh_all_button = new Gtk.Button.with_label("Refresh All");
-            refresh_all_button.halign = Gtk.Align.FILL;
-            refresh_all_button.hexpand = true;
-            refresh_all_button.add_css_class("flat");
-            refresh_all_button.add_css_class("sidewing-menu-item");
-            refresh_all_button.set_can_focus(false);
-            align_button_label(refresh_all_button);
-            refresh_all_button.clicked.connect(() => {
-                plugin_manager.refresh_all();
+            var reload_button = new Gtk.Button.with_label("Reload");
+            reload_button.halign = Gtk.Align.FILL;
+            reload_button.hexpand = true;
+            reload_button.add_css_class("flat");
+            reload_button.add_css_class("sidewing-menu-item");
+            reload_button.set_can_focus(false);
+            align_button_label(reload_button);
+            reload_button.clicked.connect(() => {
+                plugin_manager.reload();
             });
-            box.append(refresh_all_button);
+            box.append(reload_button);
 
             popover.set_child(box);
         }
