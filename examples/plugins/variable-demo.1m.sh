@@ -37,6 +37,3 @@ if [ "$verbose" = "true" ]; then
         i=$((i + 1))
     done
 fi
-
-echo "---"
-echo "Refresh | refresh=true"

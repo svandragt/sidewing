@@ -4,17 +4,23 @@ namespace Sidewing {
         private PluginManager plugin_manager;
         private SettingsStore settings_store;
         private DesktopIntegration desktop_integration;
+        private VariablesEditor variables_editor;
+        private Gtk.Application application;
 
         public MenuBuilder(
+            Gtk.Application application,
             ActionDispatcher action_dispatcher,
             PluginManager plugin_manager,
             SettingsStore settings_store,
-            DesktopIntegration desktop_integration
+            DesktopIntegration desktop_integration,
+            VariablesEditor variables_editor
         ) {
+            this.application = application;
             this.action_dispatcher = action_dispatcher;
             this.plugin_manager = plugin_manager;
             this.settings_store = settings_store;
             this.desktop_integration = desktop_integration;
+            this.variables_editor = variables_editor;
         }
 
         public Gtk.Widget build_plugin_menu(PluginRecord record) {
@@ -59,12 +65,53 @@ namespace Sidewing {
 
             box.append(heading);
 
-            if (record.state.menu_items.size == 0) {
+            var visible_items = new Gee.ArrayList<ParsedItem>();
+            foreach (var item in record.state.menu_items) {
+                if (is_plugin_refresh_only_item(item)) {
+                    continue;
+                }
+                visible_items.add(item);
+            }
+
+            if (visible_items.size == 0) {
                 box.append(build_info_label("No menu items"));
             } else {
-                foreach (var item in record.state.menu_items) {
+                foreach (var item in visible_items) {
                     box.append(build_item_widget(record, item));
                 }
+            }
+
+            var footer_separator = new Gtk.Separator(Gtk.Orientation.HORIZONTAL);
+            footer_separator.margin_top = 6;
+            footer_separator.margin_bottom = 6;
+            box.append(footer_separator);
+
+            var refresh_button = new Gtk.Button.with_label("Refresh");
+            refresh_button.halign = Gtk.Align.FILL;
+            refresh_button.hexpand = true;
+            refresh_button.add_css_class("flat");
+            refresh_button.add_css_class("sidewing-menu-item");
+            refresh_button.set_can_focus(false);
+            align_button_label(refresh_button);
+            refresh_button.clicked.connect(() => {
+                dismiss_enclosing_popover(refresh_button);
+                plugin_manager.refresh_record(record);
+            });
+            box.append(refresh_button);
+
+            if (record.definition.variable_definitions.size > 0) {
+                var edit_vars_button = new Gtk.Button.with_label("Edit Variables…");
+                edit_vars_button.halign = Gtk.Align.FILL;
+                edit_vars_button.hexpand = true;
+                edit_vars_button.add_css_class("flat");
+                edit_vars_button.add_css_class("sidewing-menu-item");
+                edit_vars_button.set_can_focus(false);
+                align_button_label(edit_vars_button);
+                edit_vars_button.clicked.connect(() => {
+                    dismiss_enclosing_popover(edit_vars_button);
+                    variables_editor.present(application, record);
+                });
+                box.append(edit_vars_button);
             }
 
             if (record.state.warnings.size > 0) {
@@ -153,6 +200,18 @@ namespace Sidewing {
             box.append(reload_button);
 
             popover.set_child(box);
+        }
+
+        private bool is_plugin_refresh_only_item(ParsedItem item) {
+            if (item.kind != ParsedItemKind.MENU_ITEM) {
+                return false;
+            }
+            if (!item.refresh) {
+                return false;
+            }
+            bool has_action = (item.shell_command != null && item.shell_command != "")
+                || item.href != null;
+            return !has_action;
         }
 
         private Gtk.Widget build_item_widget(PluginRecord record, ParsedItem item) {

@@ -26,6 +26,7 @@ sidewing_sources += files(
   'settings-store.vala',
   'desktop-integration.vala',
   'variables-store.vala',
+  'variables-editor.vala',
   'action-dispatcher.vala',
   'log-service.vala',
 )

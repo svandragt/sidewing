@@ -59,6 +59,23 @@ namespace Sidewing {
             }
         }
 
+        public string read_value(PluginDefinition plugin, PluginVariableDefinition definition) {
+            sync_sidecar(plugin);
+            var sidecar = load_sidecar_object(plugin);
+            return get_environment_value(sidecar, definition);
+        }
+
+        public void write_values(PluginDefinition plugin, Gee.Map<string, string> values) {
+            var sidecar = load_sidecar_object(plugin);
+            foreach (var definition in plugin.variable_definitions) {
+                if (!values.has_key(definition.name)) {
+                    continue;
+                }
+                set_member_value(sidecar, definition, values.get(definition.name));
+            }
+            save_sidecar_object(plugin, sidecar);
+        }
+
         public void apply_to_launcher(SubprocessLauncher launcher, PluginDefinition plugin) {
             if (plugin.variable_definitions.size == 0) {
                 return;

@@ -9,6 +9,7 @@ namespace Sidewing {
         private XbarParser xbar_parser;
         private PluginManager plugin_manager;
         private ActionDispatcher action_dispatcher;
+        private VariablesEditor variables_editor;
         private MenuBuilder menu_builder;
         private BarWindow? bar_window;
 
@@ -68,7 +69,15 @@ namespace Sidewing {
                 log_service
             );
             action_dispatcher = new ActionDispatcher(this, log_service);
-            menu_builder = new MenuBuilder(action_dispatcher, plugin_manager, settings_store, desktop_integration);
+            variables_editor = new VariablesEditor(variables_store, plugin_manager, log_service);
+            menu_builder = new MenuBuilder(
+                this,
+                action_dispatcher,
+                plugin_manager,
+                settings_store,
+                desktop_integration,
+                variables_editor
+            );
             load_css();
 
             log_service.info("Sidewing initialized");
