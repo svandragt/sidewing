@@ -112,6 +112,13 @@ namespace Sidewing {
         }
 
         private void apply_run_result(PluginRecord record, PluginRunResult result) {
+            if (!plugin_records.contains(record)) {
+                record.run_in_progress = false;
+                record.refresh_queued = false;
+                log_service.info(@"Discarding stale result for $(record.definition.filename); record no longer tracked");
+                return;
+            }
+
             if (result.missing_executable) {
                 record.run_in_progress = false;
                 handle_missing_plugin(record);

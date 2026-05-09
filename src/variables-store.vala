@@ -248,9 +248,22 @@ namespace Sidewing {
                 double number_value;
                 if (double.try_parse(raw_value, out number_value)) {
                     sidecar.set_double_member(definition.name, number_value);
-                } else {
-                    set_member_value(sidecar, definition, definition.default_value);
+                    break;
                 }
+
+                if (raw_value != definition.default_value
+                    && int64.try_parse(definition.default_value, out int_value)) {
+                    sidecar.set_int_member(definition.name, int_value);
+                    break;
+                }
+
+                if (raw_value != definition.default_value
+                    && double.try_parse(definition.default_value, out number_value)) {
+                    sidecar.set_double_member(definition.name, number_value);
+                    break;
+                }
+
+                sidecar.set_int_member(definition.name, 0);
                 break;
             case PluginVariableType.BOOLEAN:
                 sidecar.set_boolean_member(definition.name, raw_value.down() == "true");
