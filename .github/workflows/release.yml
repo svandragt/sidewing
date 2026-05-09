@@ -24,11 +24,17 @@ jobs:
         with:
           ref: ${{ inputs.tag || github.ref }}
 
+      - name: Cache apt archives
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-${{ runner.os }}-deb-v1
+
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential devscripts equivs dpkg-dev debhelper \
+            build-essential dpkg-dev debhelper \
             meson ninja-build valac pkg-config \
             libgtk-4-dev libgee-0.8-dev libjson-glib-dev libx11-dev
 
