@@ -115,7 +115,10 @@ namespace Sidewing {
 
         private void load_css() {
             var provider = new Gtk.CssProvider();
-            string css_path = Build.APPLICATION_CSS_PATH;
+            string css_path = Path.build_filename(Build.APPLICATION_DATA_DIR, "application.css");
+            if (!FileUtils.test(css_path, FileTest.EXISTS)) {
+                css_path = Build.APPLICATION_CSS_PATH;
+            }
             if (!FileUtils.test(css_path, FileTest.EXISTS)) {
                 css_path = Path.build_filename(Environment.get_current_dir(), "src", "application.css");
             }

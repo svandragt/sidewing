@@ -1,6 +1,11 @@
+application_data_dir = get_option('prefix') / get_option('datadir') / 'sidewing'
+bundled_examples_dir = application_data_dir / 'examples' / 'plugins'
+
 config = configuration_data()
 config.set_quoted('PROJECT_SOURCE_ROOT', meson.project_source_root())
 config.set_quoted('APPLICATION_CSS_PATH', meson.project_source_root() / 'src' / 'application.css')
+config.set_quoted('APPLICATION_DATA_DIR', application_data_dir)
+config.set_quoted('BUNDLED_EXAMPLES_DIR', bundled_examples_dir)
 
 build_config = configure_file(
   input: 'build-config.vala.in',
@@ -44,5 +49,10 @@ executable(
     json_glib_dep,
     x11_dep,
   ],
-  install: false,
+  install: true,
+)
+
+install_data(
+  'application.css',
+  install_dir: application_data_dir,
 )

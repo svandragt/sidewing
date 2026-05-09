@@ -1,0 +1,14 @@
+build/
+_stage/
+_install/
+_flatpak-build/
+_flatpak-repo/
+.flatpak-builder/
+sidewing.flatpak
+*.deb
+*.buildinfo
+*.changes
+debian/.debhelper/
+debian/files
+debian/sidewing/
+debian/debhelper-build-stamp

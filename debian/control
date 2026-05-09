@@ -1,0 +1,27 @@
+Source: sidewing
+Section: utils
+Priority: optional
+Maintainer: Sander van Dragt <sander@humanmade.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ meson (>= 0.60),
+ ninja-build,
+ valac,
+ pkg-config,
+ libgtk-4-dev,
+ libgee-0.8-dev,
+ libjson-glib-dev,
+ libx11-dev,
+Standards-Version: 4.6.2
+Homepage: https://github.com/svandragt/sidewing
+Rules-Requires-Root: no
+
+Package: sidewing
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: Translucent xbar-style desktop bar for X11
+ Sidewing is a small GTK4 desktop bar for X11 multi-monitor Linux desktops.
+ It runs local executable scripts as plugins, parses xbar-style stdout, and
+ renders a translucent bar with per-plugin popover menus.

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Sidewing
+GenericName=Plugin Bar
+Comment=Translucent xbar-style desktop bar for X11
+Exec=sidewing
+Icon=com.vandragt.sidewing
+Terminal=false
+Categories=Utility;
+Keywords=panel;bar;xbar;menu;plugin;
+StartupNotify=true

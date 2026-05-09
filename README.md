@@ -37,6 +37,33 @@ The implementation is narrower than the long-term spec.
 - Only the first bar line is shown as the visible title
 - Maximized-window tracking, focus-loss menu dismissal, and reserve-space behavior are implemented for X11 only
 
+## Install
+
+Prebuilt artifacts are attached to each [GitHub Release](https://github.com/svandragt/sidewing/releases).
+
+### elementary OS / Ubuntu / Debian
+
+Download the latest `.deb` and install it (apt resolves the runtime libs):
+
+```sh
+sudo apt install ./sidewing_*.deb
+```
+
+### Other Linux (Flatpak)
+
+Download `sidewing.flatpak` and run:
+
+```sh
+flatpak install --user sidewing.flatpak
+flatpak run com.vandragt.sidewing
+```
+
+The Flatpak uses `--filesystem=host` and `--share=network` so plugin scripts can read host files and reach the network — Sidewing's plugin model is incompatible with a strict sandbox.
+
+### From source
+
+See [Build Requirements](#build-requirements) and [Build](#build) below.
+
 ## Build Requirements
 
 You need:

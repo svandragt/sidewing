@@ -1,4 +1,4 @@
-.PHONY: all setup configure build compile run restart clean distclean rebuild
+.PHONY: all setup configure build compile run restart clean distclean rebuild deb flatpak
 
 BUILD_DIR ?= build
 MESON ?= meson
@@ -34,3 +34,13 @@ distclean:
 	rm -rf $(BUILD_DIR)
 
 rebuild: distclean build
+
+deb:
+	dpkg-buildpackage -us -uc -b
+
+flatpak:
+	flatpak-builder --user --install --force-clean _flatpak-build flatpak/com.vandragt.sidewing.yaml
+
+flatpak-bundle:
+	flatpak-builder --repo=_flatpak-repo --force-clean _flatpak-build flatpak/com.vandragt.sidewing.yaml
+	flatpak build-bundle _flatpak-repo sidewing.flatpak com.vandragt.sidewing

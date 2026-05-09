@@ -53,7 +53,11 @@ Shared types live in `src/models.vala`. `src/build-config.vala.in` is configured
 - `src/variables-editor.vala`: GTK form generated from `<xbar.var>` metadata
 - `src/models.vala`: shared data models
 - `src/desktop-integration.vala`: user desktop entry and autostart integration
-- `examples/plugins/`: bundled example plugins
+- `examples/plugins/`: bundled example plugins (installed to `${datadir}/sidewing/examples/plugins`)
+- `data/`: `.desktop` launcher and AppStream metainfo, installed system-wide
+- `debian/`: Debian source package (built via `dh --buildsystem=meson`)
+- `flatpak/com.vandragt.sidewing.yaml`: Flatpak manifest (uses `org.gnome.Platform//46`, builds `libgee` from source)
+- `.github/workflows/release.yml`: builds `.deb` + `.flatpak` on tag push and uploads to the matching GitHub Release
 - `docs/sidewing-spec.md`: broader behavior/spec reference
 - `docs/implementation-plan.md`: planned architecture / outstanding work
 

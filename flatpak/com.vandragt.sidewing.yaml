@@ -1,0 +1,26 @@
+app-id: com.vandragt.sidewing
+runtime: org.gnome.Platform
+runtime-version: '46'
+sdk: org.gnome.Sdk
+command: sidewing
+
+finish-args:
+  - --socket=x11
+  - --filesystem=host
+  - --share=network
+  - --talk-name=org.freedesktop.systemd1
+  - --filesystem=~/.config/systemd/user:create
+
+modules:
+  - name: libgee
+    buildsystem: meson
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/libgee/0.20/libgee-0.20.8.tar.xz
+        sha256: 5526cdc1a81e879f0e919f08866542813b2df40aef606b6ccd2ab4eba4717142
+
+  - name: sidewing
+    buildsystem: meson
+    sources:
+      - type: dir
+        path: ..

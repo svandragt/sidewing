@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.vandragt.sidewing</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Sidewing</name>
+  <summary>Translucent xbar-style desktop bar for X11</summary>
+  <description>
+    <p>
+      Sidewing is a small GTK4 desktop bar for X11 multi-monitor Linux desktops.
+      It runs local executable scripts as plugins, parses xbar-style stdout, and
+      renders a translucent bar with per-plugin popover menus.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>xbar-compatible plugin format with refresh intervals encoded in filenames</li>
+      <li>Generated form to edit plugin variables declared via xbar.var metadata</li>
+      <li>terminal=true menu items launch in a detected terminal emulator</li>
+      <li>Optional autostart via a systemd user unit</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">com.vandragt.sidewing.desktop</launchable>
+  <url type="homepage">https://github.com/svandragt/sidewing</url>
+  <url type="bugtracker">https://github.com/svandragt/sidewing/issues</url>
+  <developer id="com.vandragt">
+    <name>Sander van Dragt</name>
+  </developer>
+  <provides>
+    <binary>sidewing</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.2.1" date="2026-05-09"/>
+    <release version="0.2.0" date="2026-04-23"/>
+    <release version="0.1.0" date="2026-04-16"/>
+  </releases>
+</component>

@@ -26,3 +26,5 @@ add_project_arguments(
 )
 
 subdir('src')
+subdir('data')
+subdir('examples')

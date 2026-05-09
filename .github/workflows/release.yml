@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '0.*'
+      - '1.*'
+
+permissions:
+  contents: write
+
+jobs:
+  deb:
+    name: Build .deb
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            devscripts equivs dpkg-dev debhelper \
+            meson ninja-build valac pkg-config \
+            libgtk-4-dev libgee-0.8-dev libjson-glib-dev libx11-dev
+
+      - name: Build deb
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist
+          mv ../sidewing_*_*.deb dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: dist/*.deb
+
+  flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-24.04
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-46
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build bundle
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: sidewing.flatpak
+          manifest-path: flatpak/com.vandragt.sidewing.yaml
+          cache-key: flatpak-builder-${{ github.sha }}
+
+  release:
+    name: Publish GitHub release
+    runs-on: ubuntu-24.04
+    needs: [deb, flatpak]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: sidewing.flatpak
+          path: dist
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          fi
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber

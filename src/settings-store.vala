@@ -126,7 +126,14 @@ namespace Sidewing {
                 return;
             }
 
-            string bundled_examples_dir = Path.build_filename(Build.PROJECT_SOURCE_ROOT, "examples", "plugins");
+            string bundled_examples_dir = Build.BUNDLED_EXAMPLES_DIR;
+            if (!FileUtils.test(bundled_examples_dir, FileTest.IS_DIR)) {
+                bundled_examples_dir = Path.build_filename(Build.PROJECT_SOURCE_ROOT, "examples", "plugins");
+            }
+            if (!FileUtils.test(bundled_examples_dir, FileTest.IS_DIR)) {
+                log_service.warning(@"No bundled example plugins found at $(bundled_examples_dir); skipping seed");
+                return;
+            }
             var source_dir = File.new_for_path(bundled_examples_dir);
             var target_dir = File.new_for_path(plugins_dir);
 
