@@ -13,7 +13,7 @@ finish-args:
 
 modules:
   - name: libgee
-    buildsystem: meson
+    buildsystem: autotools
     sources:
       - type: archive
         url: https://download.gnome.org/sources/libgee/0.20/libgee-0.20.8.tar.xz
