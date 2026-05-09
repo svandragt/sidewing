@@ -20,7 +20,7 @@ jobs:
     name: Build .deb
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag || github.ref }}
 
@@ -28,7 +28,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            devscripts equivs dpkg-dev debhelper \
+            build-essential devscripts equivs dpkg-dev debhelper \
             meson ninja-build valac pkg-config \
             libgtk-4-dev libgee-0.8-dev libjson-glib-dev libx11-dev
 
@@ -49,10 +49,10 @@ jobs:
     name: Build Flatpak
     runs-on: ubuntu-24.04
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-46
+      image: bilelmoussaoui/flatpak-github-actions:gnome-48
       options: --privileged
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag || github.ref }}
 
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [deb, flatpak]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag || github.ref }}
 

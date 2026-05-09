@@ -1,3 +1,9 @@
+sidewing (0.2.3-1) unstable; urgency=medium
+
+  * First release with working .deb and Flatpak artifacts (CI fixes only).
+
+ -- Sander van Dragt <sander@vandragt.com>  Sat, 09 May 2026 09:45:00 +0100
+
 sidewing (0.2.2-1) unstable; urgency=medium
 
   * First release with .deb and Flatpak artifacts.
