@@ -1,7 +1,7 @@
 Source: sidewing
 Section: utils
 Priority: optional
-Maintainer: Sander van Dragt <sander@humanmade.com>
+Maintainer: Sander van Dragt <sander@vandragt.com>
 Build-Depends:
  debhelper-compat (= 13),
  meson (>= 0.60),

@@ -1,5 +1,14 @@
+sidewing (0.2.2-1) unstable; urgency=medium
+
+  * First release with .deb and Flatpak artifacts.
+  * Per-plugin variables editor (popover footer Edit Variables…).
+  * terminal=true now launches commands in a detected terminal emulator.
+  * Refresh button in plugin popover footer; refresh-only menu items hidden.
+
+ -- Sander van Dragt <sander@vandragt.com>  Sat, 09 May 2026 09:30:00 +0100
+
 sidewing (0.2.1-1) unstable; urgency=medium
 
   * Initial Debian package for Sidewing 0.2.1.
 
- -- Sander van Dragt <sander@humanmade.com>  Sat, 09 May 2026 09:00:00 +0100
+ -- Sander van Dragt <sander@vandragt.com>  Sat, 09 May 2026 09:00:00 +0100
