@@ -32,7 +32,16 @@ namespace Sidewing {
             owned ActionCompletion? on_complete = null
         ) {
             if (terminal_requested) {
-                log_service.warning(@"terminal=true is not supported yet; executing $command without a terminal");
+                if (launch_in_terminal(command, arguments, working_directory)) {
+                    if (on_complete != null) {
+                        Idle.add(() => {
+                            on_complete();
+                            return Source.REMOVE;
+                        });
+                    }
+                    return;
+                }
+                log_service.warning(@"No terminal emulator found; executing $command without a terminal");
             }
 
             new Thread<int>(@"action-$(Path.get_basename(command))", () => {
@@ -76,6 +85,70 @@ namespace Sidewing {
 
                 return 0;
             });
+        }
+
+        private bool launch_in_terminal(
+            string command,
+            Gee.List<string> arguments,
+            string working_directory
+        ) {
+            var shell_cmd = new StringBuilder();
+            shell_cmd.append(Shell.quote(command));
+            foreach (var arg in arguments) {
+                shell_cmd.append(" ");
+                shell_cmd.append(Shell.quote(arg));
+            }
+            shell_cmd.append("; status=$?; printf '\\n[exit %s — press Enter to close] ' \"$status\"; read _");
+
+            string[] candidates = {};
+            string? user_term = Environment.get_variable("TERMINAL");
+            if (user_term != null && user_term != "") {
+                candidates += user_term;
+            }
+            string[] fallbacks = {
+                "x-terminal-emulator", "gnome-terminal", "konsole",
+                "xfce4-terminal", "alacritty", "kitty", "wezterm",
+                "foot", "tilix", "xterm"
+            };
+            foreach (var t in fallbacks) {
+                candidates += t;
+            }
+
+            foreach (var term in candidates) {
+                string? path = Environment.find_program_in_path(term);
+                if (path == null) {
+                    continue;
+                }
+                string[] argv = build_terminal_argv(term, path, shell_cmd.str);
+                try {
+                    var launcher = new SubprocessLauncher(SubprocessFlags.NONE);
+                    launcher.set_cwd(working_directory);
+                    launcher.spawnv(argv);
+                    log_service.info(@"Executed in terminal ($term): $command");
+                    return true;
+                } catch (Error err) {
+                    log_service.warning(@"Failed to launch terminal $term: $(err.message)");
+                }
+            }
+            return false;
+        }
+
+        private string[] build_terminal_argv(string term, string path, string shell_cmd) {
+            string name = Path.get_basename(term);
+            switch (name) {
+                case "gnome-terminal":
+                case "tilix":
+                    return { path, "--", "sh", "-c", shell_cmd, null };
+                case "wezterm":
+                    return { path, "start", "--", "sh", "-c", shell_cmd, null };
+                case "kitty":
+                case "foot":
+                    return { path, "sh", "-c", shell_cmd, null };
+                case "xfce4-terminal":
+                    return { path, "-x", "sh", "-c", shell_cmd, null };
+                default:
+                    return { path, "-e", "sh", "-c", shell_cmd, null };
+            }
         }
     }
 }

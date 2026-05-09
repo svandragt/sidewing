@@ -34,7 +34,6 @@ The implementation is narrower than the long-term spec.
 
 - X11 placement is implemented; Wayland support is not
 - There is no full settings UI yet
-- `terminal=true` command launching is not implemented yet; command actions currently run without a terminal
 - Unsupported xbar metadata is ignored
 - Only the first bar line is shown as the visible title
 - Plugin variables are loaded from `<plugin>.vars.json`; there is no in-app variables editor yet
