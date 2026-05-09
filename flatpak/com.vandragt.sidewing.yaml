@@ -1,6 +1,6 @@
 app-id: com.vandragt.sidewing
 runtime: org.gnome.Platform
-runtime-version: '48'
+runtime-version: '47'
 sdk: org.gnome.Sdk
 command: sidewing
 
@@ -17,7 +17,7 @@ modules:
     sources:
       - type: archive
         url: https://download.gnome.org/sources/libgee/0.20/libgee-0.20.8.tar.xz
-        sha256: c3713f2f3bc12c8cff25f2a8bb9170d0cebea9816e11d3b4c1d56c97cd323282
+        sha256: 189815ac143d89867193b0c52b7dc31f3aa108a15f04d6b5dca2b6adfad0b0ee
 
   - name: sidewing
     buildsystem: meson
