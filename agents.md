@@ -18,8 +18,10 @@ The codebase is still an MVP.
 - `src/plugin-manager.vala`: plugin discovery and scheduling
 - `src/plugin-runner.vala`: plugin execution
 - `src/xbar-parser.vala`: xbar text parsing
-- `src/menu-builder.vala`: GTK menu construction from parsed items
-- `src/action-dispatcher.vala`: menu action handling
+- `src/menu-builder.vala`: GTK menu construction from parsed items, including the popover footer (Refresh + Edit Variables…)
+- `src/action-dispatcher.vala`: menu action handling, including `terminal=true` terminal-emulator launching
+- `src/variables-store.vala`: read/write `<plugin>.vars.json` sidecars and export them as env vars
+- `src/variables-editor.vala`: GTK form generated from `<xbar.var>` metadata
 - `src/models.vala`: shared data models
 - `src/desktop-integration.vala`: user desktop entry and autostart integration
 - `examples/plugins/`: bundled example plugins

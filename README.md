@@ -8,7 +8,7 @@ Current target:
 - GTK4 + Vala
 - local, unsandboxed script plugins
 
-The current codebase is an MVP-in-progress. It already discovers and runs plugins, schedules refreshes from xbar-style filenames, renders a bar window, and opens plugin menus. Several planned features are still not implemented yet.
+Sidewing discovers and runs plugins, schedules refreshes from xbar-style filenames, renders a translucent bar, and opens per-plugin popover menus with a built-in variables editor. See [Current Limitations](#current-limitations) for scope boundaries.
 
 <img width="392" height="223" alt="image" src="https://github.com/user-attachments/assets/87284b40-2c1b-46ac-b92a-f8b047667c72" />
 
@@ -33,10 +33,8 @@ The current codebase is an MVP-in-progress. It already discovers and runs plugin
 The implementation is narrower than the long-term spec.
 
 - X11 placement is implemented; Wayland support is not
-- There is no full settings UI yet
 - Unsupported xbar metadata is ignored
 - Only the first bar line is shown as the visible title
-- Plugin variables are loaded from `<plugin>.vars.json`; there is no in-app variables editor yet
 - Maximized-window tracking, focus-loss menu dismissal, and reserve-space behavior are implemented for X11 only
 
 ## Build Requirements
@@ -87,10 +85,12 @@ On first launch, `Sidewing` copies the example plugins from [`examples/plugins`]
 
 From the bar app menu you can:
 
-- install a user desktop entry
-- enable or disable autostart for the current user session
+- open the plugins folder
+- enable or disable autostart for the current user session (managed via a systemd user unit)
 - toggle whether the bar should reserve space for maximized windows on X11
 - reload (rediscover the plugins directory and refresh all plugins)
+
+Each plugin's own popover ends with a footer containing a **Refresh** button and, when the plugin declares variables, an **Edit Variables…** button that opens a generated form (see [Plugin Variables](#plugin-variables)).
 
 On X11, Sidewing also detects whether the selected monitor currently has a maximized window. That state is checked when the bar appears and then polled periodically so the bar can switch between its translucent and opaque styles as window state changes.
 
@@ -143,8 +143,8 @@ Currently recognized metadata:
 - `href="..."`
 - `shell="..."`
 - `param1="..."`, `param2="..."`, ...
-- `terminal=true`
-- `refresh=true`
+- `terminal=true` (runs the command inside a detected terminal emulator: honours `$TERMINAL`, then falls back through `x-terminal-emulator`, `gnome-terminal`, `konsole`, `xfce4-terminal`, `alacritty`, `kitty`, `wezterm`, `foot`, `tilix`, `xterm`)
+- `refresh=true` (items whose only effect is `refresh=true` are hidden — the popover footer's Refresh button covers that case)
 - `disabled=true`
 
 Environment variables set for plugins:
@@ -176,7 +176,9 @@ When a plugin with variables is discovered, Sidewing creates a sidecar file next
 plugin.1m.sh.vars.json
 ```
 
-That JSON file stores the current values and Sidewing exports them as environment variables before each plugin run. Variable values are user-configurable by editing the sidecar JSON file and refreshing the plugin.
+That JSON file stores the current values and Sidewing exports them as environment variables before each plugin run.
+
+Each plugin popover footer includes a **Refresh** button. Plugins that declare any `<xbar.var>` metadata also get an **Edit Variables…** button that opens a generated form: text fields for `string` and `number`, a switch for `boolean`, a dropdown for `select`. Variables whose name contains `TOKEN`, `SECRET`, `PASSWORD`, or `API_KEY` are masked. Saving writes the sidecar JSON and refreshes the plugin so the new values take effect immediately. The sidecar can still be edited by hand if preferred.
 
 ## Examples
 

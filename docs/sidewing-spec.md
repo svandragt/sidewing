@@ -350,6 +350,13 @@ Runtime model:
 
 - Export each configured variable as an environment variable before launching the plugin.
 
+Editor:
+
+- Each plugin popover that declares any `<xbar.var>` shows an `Edit Variables…` button in its footer.
+- The form is generated from metadata: text fields for `string` and `number`, a switch for `boolean`, a dropdown for `select`.
+- Variable names containing `TOKEN`, `SECRET`, `PASSWORD`, or `API_KEY` are masked.
+- Saving writes the sidecar JSON and triggers a per-plugin refresh so the new values take effect immediately.
+
 Compatibility note:
 
 - Matching xbar's sidecar naming is desirable because it improves plugin portability.
@@ -427,12 +434,14 @@ When a menu item specifies `shell=...`:
 `terminal=true|false` mapping for Linux:
 
 - `false`: execute directly in background
-- `true`: launch using a configurable terminal command in a future release
+- `true`: launch the command inside a detected terminal emulator
 
-Recommended MVP:
+Terminal detection order:
 
-- support `terminal=false`
-- treat `terminal=true` as best-effort or unsupported, documented clearly
+- `$TERMINAL` if set
+- fallback list: `x-terminal-emulator`, `gnome-terminal`, `konsole`, `xfce4-terminal`, `alacritty`, `kitty`, `wezterm`, `foot`, `tilix`, `xterm`
+
+Each candidate is invoked with the argv shape it expects (`-- sh -c …`, `-e sh -c …`, `-x sh -c …`, etc.). The wrapper waits on Enter after the command exits so output stays readable. If no terminal is found the command runs without a terminal and a warning is logged.
 
 ## Parser Specification
 
@@ -648,7 +657,7 @@ The MVP should include:
 - `Sidewing` shows one visible bar title per plugin in MVP.
 - If a plugin emits multiple pre-`---` lines, the first line is used as the visible title in MVP.
 - `alternate=true` is deferred and may be parsed as a no-op.
-- `terminal=true` is deferred; Linux terminal launching is not part of the MVP contract.
+- `terminal=true` launches commands inside a detected terminal emulator (`$TERMINAL` then a fallback list); falls back to non-terminal execution with a warning if none are present.
 - Invalid or non-executable plugins are ignored by the runtime and surfaced through logs/error UI rather than shown in the bar.
 - If monitor hotplug invalidates the stored target, `Sidewing` may move automatically to the next best monitor based on the existing fallback rules.
 
@@ -664,7 +673,6 @@ The MVP should include:
 ## Deferred Decisions
 
 - Whether to emulate exact xbar bar-title cycling behavior after MVP.
-- Which Linux terminal launcher should back `terminal=true`.
 - Whether invalid plugins should eventually appear as disabled rows in a settings UI.
 - Whether monitor hotplug should become user-configurable instead of automatic.
 
