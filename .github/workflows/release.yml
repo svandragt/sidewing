@@ -20,7 +20,7 @@ jobs:
     name: Build .deb
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref }}
 
@@ -52,7 +52,7 @@ jobs:
       image: bilelmoussaoui/flatpak-github-actions:gnome-47
       options: --privileged
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref }}
 
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [deb, flatpak]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref }}
 
