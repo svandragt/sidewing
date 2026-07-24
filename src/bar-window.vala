@@ -459,12 +459,19 @@ namespace Sidewing {
 
             unowned X.Display xdisplay = x11_display.get_xdisplay();
             cache_net_wm_atoms(x11_display);
+
+            // Windows enumerated from the X server (active window, stacking list) can be
+            // destroyed before we finish querying their properties/geometry. Without this
+            // trap, that race raises a BadWindow error that GDK treats as fatal and the
+            // whole app exits.
+            x11_display.error_trap_push();
             bool owned_active = any_owned_window_is_active(xdisplay);
             update_x11_focus_state(owned_active);
             dismiss_menus_if_focus_elsewhere(owned_active);
-            set_has_maximized_window_on_monitor(
-                active_window_is_maximized_on_monitor(xdisplay, monitor)
-            );
+            bool maximized_on_monitor = active_window_is_maximized_on_monitor(xdisplay, monitor);
+            x11_display.error_trap_pop_ignored();
+
+            set_has_maximized_window_on_monitor(maximized_on_monitor);
         }
 
         private X.Window? active_window_at_popover_open = null;
