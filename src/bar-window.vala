@@ -13,17 +13,24 @@ namespace Sidewing {
         private X.Atom net_active_window_atom;
         private X.Atom net_client_list_stacking_atom;
         private X.Atom net_wm_state_atom;
+        private X.Atom net_wm_state_above_atom;
+        private X.Atom net_wm_state_sticky_atom;
         private X.Atom net_wm_state_maximized_vert_atom;
         private X.Atom net_wm_state_maximized_horz_atom;
+        private X.Atom net_wm_window_opacity_atom;
+        private X.Window strut_window = 0;
+        private bool strut_window_is_mapped = false;
         private Gtk.Box bar_frame;
         private Gtk.Box items_box;
         private Gtk.MenuButton settings_button;
         private Gee.ArrayList<Gtk.MenuButton> plugin_buttons;
         private Gee.HashMap<string, Gtk.MenuButton> buttons_by_plugin_path;
-        private int last_applied_bar_height = -1;
         private bool has_maximized_window_on_monitor = false;
         private bool has_x11_focus = false;
+        private uint placement_idle_id = 0;
         private uint maximized_window_poll_id = 0;
+        private Gdk.X11.Display? configure_event_display = null;
+        private ulong configure_event_handler_id = 0;
 
         public BarWindow(
             Gtk.Application app,
@@ -42,7 +49,9 @@ namespace Sidewing {
             this.log_service = log_service;
 
             decorated = false;
-            resizable = false;
+            // Allow the window manager to grant the full monitor width rather than
+            // publishing a content-derived maximum size.
+            resizable = true;
             default_height = settings_store.bar_height;
             default_width = 800;
             add_css_class("sidewing-window");
@@ -97,7 +106,12 @@ namespace Sidewing {
         }
 
         public void queue_placement() {
-            Idle.add(() => {
+            if (placement_idle_id != 0) {
+                return;
+            }
+
+            placement_idle_id = Idle.add_full(Priority.LOW, () => {
+                placement_idle_id = 0;
                 log_service.info("Running queued bar placement");
                 place_on_selected_monitor();
                 return Source.REMOVE;
@@ -124,6 +138,7 @@ namespace Sidewing {
         private void bind_window_state() {
             map.connect(() => {
                 log_service.info("Bar window mapped; reapplying X11 placement and window role");
+                start_configure_event_tracking();
                 queue_placement();
                 start_maximized_window_tracking();
             });
@@ -141,6 +156,8 @@ namespace Sidewing {
             });
 
             close_request.connect(() => {
+                unmap_strut_window();
+                stop_configure_event_tracking();
                 stop_maximized_window_tracking();
                 return false;
             });
@@ -148,7 +165,9 @@ namespace Sidewing {
 
         public override void size_allocate(int width, int height, int baseline) {
             base.size_allocate(width, height, baseline);
-            update_reserved_space_from_allocation(height);
+            if (get_mapped()) {
+                queue_placement();
+            }
         }
 
         private void rebuild_items() {
@@ -231,24 +250,6 @@ namespace Sidewing {
         }
 
         private int get_bar_pixel_height() {
-            var surface = get_surface();
-            if (surface != null) {
-                int surface_height = surface.get_height();
-                if (surface_height > 0) {
-                    return surface_height;
-                }
-            }
-
-            int allocated_height = get_height();
-            if (allocated_height > 0) {
-                return allocated_height;
-            }
-
-            int frame_allocated_height = bar_frame.get_height();
-            if (frame_allocated_height > 0) {
-                return frame_allocated_height;
-            }
-
             int minimum = settings_store.bar_height;
             int natural = settings_store.bar_height;
 
@@ -281,16 +282,118 @@ namespace Sidewing {
             X.Window xid = x11_surface.get_xid();
             int bar_pixel_height = get_bar_pixel_height();
             cache_net_wm_atoms(x11_display);
-            xdisplay.move_resize_window(
-                xid,
-                monitor.x,
-                monitor.y,
-                (uint) monitor.width,
-                (uint) bar_pixel_height
-            );
-            apply_x11_window_role(xdisplay, xid, monitor, bar_pixel_height);
+
+            x11_display.error_trap_push();
+            update_strut_window(xdisplay, monitor, bar_pixel_height);
+            apply_visible_window_role(xdisplay, xid);
+            if (!window_has_expected_geometry(xdisplay, xid, monitor, bar_pixel_height)) {
+                xdisplay.move_resize_window(
+                    xid,
+                    monitor.x,
+                    monitor.y,
+                    (uint) monitor.width,
+                    (uint) bar_pixel_height
+                );
+            }
             xdisplay.raise_window(xid);
             xdisplay.flush();
+            x11_display.error_trap_pop_ignored();
+        }
+
+        private void start_configure_event_tracking() {
+            if (configure_event_handler_id != 0) {
+                return;
+            }
+
+            var x11_display = Gdk.Display.get_default() as Gdk.X11.Display;
+            var x11_surface = get_surface() as Gdk.X11.Surface;
+            if (x11_display == null || x11_surface == null) {
+                return;
+            }
+
+            X.Window own_window = x11_surface.get_xid();
+            configure_event_display = x11_display;
+            configure_event_handler_id = x11_display.xevent.connect((event) => {
+                if (event.type != (int) X.EventType.ConfigureNotify
+                    || event.xconfigure.window != own_window) {
+                    return false;
+                }
+
+                var monitor = monitor_manager.get_selected_monitor(settings_store.selected_monitor_id);
+                if (monitor == null) {
+                    return false;
+                }
+
+                if (!BarPlacement.matches(
+                    event.xconfigure.x,
+                    event.xconfigure.y,
+                    event.xconfigure.width,
+                    event.xconfigure.height,
+                    monitor,
+                    get_bar_pixel_height()
+                )) {
+                    queue_placement();
+                }
+
+                return false;
+            });
+        }
+
+        private void stop_configure_event_tracking() {
+            if (configure_event_display == null || configure_event_handler_id == 0) {
+                return;
+            }
+
+            SignalHandler.disconnect(configure_event_display, configure_event_handler_id);
+            configure_event_display = null;
+            configure_event_handler_id = 0;
+        }
+
+        private bool window_has_expected_geometry(
+            X.Display xdisplay,
+            X.Window window,
+            MonitorInfo monitor,
+            int bar_height
+        ) {
+            int root_x;
+            int root_y;
+            X.Window child_return;
+            bool translated = xdisplay.translate_coordinates(
+                window,
+                xdisplay.default_root_window(),
+                0,
+                0,
+                out root_x,
+                out root_y,
+                out child_return
+            );
+
+            X.Window root_return;
+            int unused_x;
+            int unused_y;
+            uint width = 0;
+            uint height = 0;
+            uint border_width;
+            uint depth;
+            xdisplay.get_geometry(
+                window,
+                out root_return,
+                out unused_x,
+                out unused_y,
+                out width,
+                out height,
+                out border_width,
+                out depth
+            );
+
+            return translated && BarPlacement.matches(
+                root_x,
+                root_y,
+                (int) width,
+                (int) height,
+                monitor,
+                bar_height
+            );
         }
 
         private void cache_net_wm_atoms(Gdk.X11.Display x11_display) {
@@ -306,21 +409,122 @@ namespace Sidewing {
             net_active_window_atom = x11_display.get_xatom_by_name("_NET_ACTIVE_WINDOW");
             net_client_list_stacking_atom = x11_display.get_xatom_by_name("_NET_CLIENT_LIST_STACKING");
             net_wm_state_atom = x11_display.get_xatom_by_name("_NET_WM_STATE");
+            net_wm_state_above_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_ABOVE");
+            net_wm_state_sticky_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_STICKY");
             net_wm_state_maximized_vert_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_VERT");
             net_wm_state_maximized_horz_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_HORZ");
+            net_wm_window_opacity_atom = x11_display.get_xatom_by_name("_NET_WM_WINDOW_OPACITY");
         }
 
-        private void apply_x11_window_role(X.Display xdisplay, X.Window xid, MonitorInfo monitor, int bar_height) {
-            if (settings_store.reserve_space_for_maximized_windows) {
-                set_atom_property(xdisplay, xid, net_wm_window_type_atom, net_wm_window_type_dock_atom);
-                set_strut_properties(xdisplay, xid, monitor, bar_height);
-                last_applied_bar_height = bar_height;
-            } else {
-                set_atom_property(xdisplay, xid, net_wm_window_type_atom, net_wm_window_type_normal_atom);
-                xdisplay.delete_property(xid, net_wm_strut_atom);
-                xdisplay.delete_property(xid, net_wm_strut_partial_atom);
-                last_applied_bar_height = -1;
+        private void apply_visible_window_role(X.Display xdisplay, X.Window xid) {
+            set_atom_property(xdisplay, xid, net_wm_window_type_atom, net_wm_window_type_normal_atom);
+            xdisplay.delete_property(xid, net_wm_strut_atom);
+            xdisplay.delete_property(xid, net_wm_strut_partial_atom);
+            request_window_state(xdisplay, xid, net_wm_state_above_atom, net_wm_state_sticky_atom);
+        }
+
+        private void update_strut_window(X.Display xdisplay, MonitorInfo monitor, int bar_height) {
+            if (!settings_store.reserve_space_for_maximized_windows) {
+                unmap_strut_window();
+                return;
             }
+
+            if (strut_window == 0) {
+                strut_window = X.create_simple_window(
+                    xdisplay,
+                    xdisplay.default_root_window(),
+                    monitor.x,
+                    monitor.y,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0
+                );
+
+                X.SetWindowAttributes attributes = {};
+                attributes.override_redirect = true;
+                xdisplay.change_window_attributes(
+                    strut_window,
+                    (ulong) X.CW.OverrideRedirect,
+                    attributes
+                );
+                set_atom_property(
+                    xdisplay,
+                    strut_window,
+                    net_wm_window_type_atom,
+                    net_wm_window_type_dock_atom
+                );
+
+                uint32[] transparent = { 0 };
+                xdisplay.change_property(
+                    strut_window,
+                    net_wm_window_opacity_atom,
+                    X.XA_CARDINAL,
+                    32,
+                    X.PropMode.Replace,
+                    encode_uint32(transparent),
+                    transparent.length
+                );
+            }
+
+            xdisplay.move_resize_window(
+                strut_window,
+                monitor.x,
+                monitor.y,
+                1,
+                1
+            );
+            set_strut_properties(xdisplay, strut_window, monitor, bar_height);
+            if (!strut_window_is_mapped) {
+                xdisplay.map_window(strut_window);
+                strut_window_is_mapped = true;
+            }
+        }
+
+        private void unmap_strut_window() {
+            if (strut_window == 0 || !strut_window_is_mapped) {
+                return;
+            }
+
+            var x11_display = Gdk.Display.get_default() as Gdk.X11.Display;
+            if (x11_display == null) {
+                return;
+            }
+
+            x11_display.error_trap_push();
+            x11_display.get_xdisplay().unmap_window(strut_window);
+            x11_display.get_xdisplay().flush();
+            x11_display.error_trap_pop_ignored();
+            strut_window_is_mapped = false;
+        }
+
+        private void request_window_state(
+            X.Display xdisplay,
+            X.Window xid,
+            X.Atom first_state,
+            X.Atom second_state
+        ) {
+            X.Event event = {};
+            event.xclient.type = (int) X.EventType.ClientMessage;
+            event.xclient.display = xdisplay;
+            event.xclient.window = xid;
+            event.xclient.message_type = net_wm_state_atom;
+            event.xclient.format = 32;
+            event.xclient.l[0] = 1;
+            event.xclient.l[1] = (long) first_state;
+            event.xclient.l[2] = (long) second_state;
+            event.xclient.l[3] = 1;
+
+            xdisplay.send_event(
+                xdisplay.default_root_window(),
+                false,
+                (long) (
+                    X.EventMask.SubstructureRedirectMask
+                    | X.EventMask.SubstructureNotifyMask
+                ),
+                ref event
+            );
         }
 
         private void set_atom_property(
@@ -396,33 +600,6 @@ namespace Sidewing {
             }
 
             return bytes;
-        }
-
-        private void update_reserved_space_from_allocation(int allocated_height) {
-            if (!settings_store.reserve_space_for_maximized_windows || allocated_height <= 0) {
-                return;
-            }
-
-            if (allocated_height == last_applied_bar_height) {
-                return;
-            }
-
-            var monitor = monitor_manager.get_selected_monitor(settings_store.selected_monitor_id);
-            var display = Gdk.Display.get_default();
-            var x11_display = display as Gdk.X11.Display;
-            var surface = get_surface();
-            var x11_surface = surface as Gdk.X11.Surface;
-
-            if (monitor == null || x11_display == null || x11_surface == null) {
-                return;
-            }
-
-            log_service.info(@"Updating reserved top space to exact allocated height $(allocated_height)px");
-            unowned X.Display xdisplay = x11_display.get_xdisplay();
-            X.Window xid = x11_surface.get_xid();
-            cache_net_wm_atoms(x11_display);
-            apply_x11_window_role(xdisplay, xid, monitor, allocated_height);
-            xdisplay.flush();
         }
 
         private void start_maximized_window_tracking() {
@@ -587,7 +764,7 @@ namespace Sidewing {
             result.add(x11_surface.get_xid());
         }
 
-private X.Window? find_topmost_maximized_window_on_monitor(
+        private X.Window? find_topmost_maximized_window_on_monitor(
             X.Display xdisplay,
             MonitorInfo monitor,
             X.Window? ignored_window
@@ -757,10 +934,10 @@ private X.Window? find_topmost_maximized_window_on_monitor(
             X.Window root_return;
             int unused_x;
             int unused_y;
-            uint width;
-            uint height;
-            uint border_width;
-            uint depth;
+            uint width = 0;
+            uint height = 0;
+            uint border_width = 0;
+            uint depth = 0;
             xdisplay.get_geometry(
                 window,
                 out root_return,
@@ -771,6 +948,9 @@ private X.Window? find_topmost_maximized_window_on_monitor(
                 out border_width,
                 out depth
             );
+            if (width == 0 || height == 0) {
+                return false;
+            }
 
             int horizontal_overlap = int.min(root_x + (int) width, monitor.x + monitor.width) - int.max(root_x, monitor.x);
             int vertical_overlap = int.min(root_y + (int) height, monitor.y + monitor.height) - int.max(root_y, monitor.y);

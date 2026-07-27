@@ -22,6 +22,7 @@ sidewing_sources += files(
   'application.vala',
   'cli-runner.vala',
   'models.vala',
+  'bar-placement.vala',
   'bar-window.vala',
   'monitor-manager.vala',
   'plugin-manager.vala',
