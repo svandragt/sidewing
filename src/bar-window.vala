@@ -417,7 +417,10 @@ namespace Sidewing {
         }
 
         private void apply_visible_window_role(X.Display xdisplay, X.Window xid) {
-            set_atom_property(xdisplay, xid, net_wm_window_type_atom, net_wm_window_type_normal_atom);
+            X.Atom window_type = settings_store.reserve_space_for_maximized_windows
+                ? net_wm_window_type_dock_atom
+                : net_wm_window_type_normal_atom;
+            set_atom_property(xdisplay, xid, net_wm_window_type_atom, window_type);
             xdisplay.delete_property(xid, net_wm_strut_atom);
             xdisplay.delete_property(xid, net_wm_strut_partial_atom);
             request_window_state(xdisplay, xid, net_wm_state_above_atom, net_wm_state_sticky_atom);
@@ -442,13 +445,9 @@ namespace Sidewing {
                     0
                 );
 
-                X.SetWindowAttributes attributes = {};
-                attributes.override_redirect = true;
-                xdisplay.change_window_attributes(
-                    strut_window,
-                    (ulong) X.CW.OverrideRedirect,
-                    attributes
-                );
+                // The window manager must manage this window for its strut to affect
+                // maximized-window placement. An override-redirect dock is invisible,
+                // but Gala ignores its reserved-space properties.
                 set_atom_property(
                     xdisplay,
                     strut_window,
