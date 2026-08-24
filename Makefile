@@ -1,4 +1,4 @@
-.PHONY: all setup configure build compile run restart clean distclean rebuild deb flatpak
+.PHONY: all setup configure build compile install run restart clean distclean rebuild deb flatpak
 
 BUILD_DIR ?= build
 MESON ?= meson
@@ -11,6 +11,9 @@ setup configure:
 build compile:
 	@if [ ! -d "$(BUILD_DIR)" ]; then $(MESON) setup $(BUILD_DIR); fi
 	$(MESON) compile -C $(BUILD_DIR)
+
+install: build
+	$(MESON) install -C $(BUILD_DIR)
 
 run: build
 	./$(BUILD_DIR)/src/sidewing
