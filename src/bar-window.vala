@@ -7,7 +7,6 @@ namespace Sidewing {
         private LogService log_service;
         private X.Atom net_wm_window_type_atom;
         private X.Atom net_wm_window_type_dock_atom;
-        private X.Atom net_wm_window_type_normal_atom;
         private X.Atom net_wm_strut_atom;
         private X.Atom net_wm_strut_partial_atom;
         private X.Atom net_active_window_atom;
@@ -403,7 +402,6 @@ namespace Sidewing {
 
             net_wm_window_type_atom = x11_display.get_xatom_by_name("_NET_WM_WINDOW_TYPE");
             net_wm_window_type_dock_atom = x11_display.get_xatom_by_name("_NET_WM_WINDOW_TYPE_DOCK");
-            net_wm_window_type_normal_atom = x11_display.get_xatom_by_name("_NET_WM_WINDOW_TYPE_NORMAL");
             net_wm_strut_atom = x11_display.get_xatom_by_name("_NET_WM_STRUT");
             net_wm_strut_partial_atom = x11_display.get_xatom_by_name("_NET_WM_STRUT_PARTIAL");
             net_active_window_atom = x11_display.get_xatom_by_name("_NET_ACTIVE_WINDOW");
@@ -417,10 +415,10 @@ namespace Sidewing {
         }
 
         private void apply_visible_window_role(X.Display xdisplay, X.Window xid) {
-            X.Atom window_type = settings_store.reserve_space_for_maximized_windows
-                ? net_wm_window_type_dock_atom
-                : net_wm_window_type_normal_atom;
-            set_atom_property(xdisplay, xid, net_wm_window_type_atom, window_type);
+            // Always a dock so the bar stays out of the taskbar/dock. Reserved space is
+            // driven by the separate strut_window, not the bar's own window type, so a
+            // NORMAL type here only leaks an untitled entry into the elementary dock.
+            set_atom_property(xdisplay, xid, net_wm_window_type_atom, net_wm_window_type_dock_atom);
             xdisplay.delete_property(xid, net_wm_strut_atom);
             xdisplay.delete_property(xid, net_wm_strut_partial_atom);
             request_window_state(xdisplay, xid, net_wm_state_above_atom, net_wm_state_sticky_atom);
