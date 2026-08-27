@@ -41,12 +41,26 @@ sev_for() {
     esac
 }
 
+# Severity -> ascending sort rank so a single sort lists worst first (red 0,
+# yellow/unknown 1, green 2) while names stay A-Z within a group.
+order_for() {
+    if [ "$1" -ge 2 ]; then
+        echo 0
+    elif [ "$1" -ge 1 ]; then
+        echo 1
+    else
+        echo 2
+    fi
+}
+
 if [ "${1:-}" = "selftest" ]; then
     [ "$(dot_for none)" = "🟢" ] || { echo "FAIL none"; exit 1; }
     [ "$(dot_for critical)" = "🔴" ] || { echo "FAIL critical"; exit 1; }
     [ "$(dot_for garbage)" = "⚪" ] || { echo "FAIL unknown"; exit 1; }
     [ "$(sev_for none)" -lt "$(sev_for minor)" ] || { echo "FAIL rank"; exit 1; }
     [ "$(sev_for garbage)" -gt "$(sev_for none)" ] || { echo "FAIL unknown rank"; exit 1; }
+    [ "$(order_for "$(sev_for major)")" -lt "$(order_for "$(sev_for none)")" ] || { echo "FAIL order red<green"; exit 1; }
+    [ "$(order_for "$(sev_for minor)")" -lt "$(order_for "$(sev_for none)")" ] || { echo "FAIL order yellow<green"; exit 1; }
     echo "ok"
     exit 0
 fi
@@ -59,7 +73,7 @@ if ! command -v curl >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
 fi
 
 worst=0
-menu=""
+rows=""
 
 # Iterate with a for loop, not `echo | while`: a piped while runs in a subshell
 # and would drop worst/menu on exit.
@@ -115,12 +129,15 @@ for line in $SERVICES; do
     sev="$(sev_for "$indicator")"
     [ "$sev" -gt "$worst" ] && worst="$sev"
 
-    menu="${menu}${dot} ${name} — ${desc} | href=${page}
+    # Tab-delimited sort keys (order, name) prefix each line; stripped before display.
+    rows="${rows}$(order_for "$sev")	${name}	${dot} ${name} — ${desc} | href=${page}
 "
     IFS='
 '
 done
 IFS="$old_ifs"
+
+menu="$(printf '%s' "$rows" | sort -t'	' -k1,1n -k2,2 | cut -f3-)"
 
 case "$worst" in
     0) overall="🟢" ;;
@@ -130,6 +147,6 @@ esac
 
 echo "$overall"
 echo "---"
-printf '%s' "$menu"
+printf '%s\n' "$menu"
 # Sidewing appends its own separator and Refresh action, so this plugin stops
 # at the service list.
