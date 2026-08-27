@@ -16,9 +16,6 @@ namespace Sidewing {
         private X.Atom net_wm_state_sticky_atom;
         private X.Atom net_wm_state_maximized_vert_atom;
         private X.Atom net_wm_state_maximized_horz_atom;
-        private X.Atom net_wm_window_opacity_atom;
-        private X.Window strut_window = 0;
-        private bool strut_window_is_mapped = false;
         private Gtk.Box bar_frame;
         private Gtk.Box items_box;
         private Gtk.MenuButton settings_button;
@@ -155,7 +152,6 @@ namespace Sidewing {
             });
 
             close_request.connect(() => {
-                unmap_strut_window();
                 stop_configure_event_tracking();
                 stop_maximized_window_tracking();
                 return false;
@@ -283,8 +279,7 @@ namespace Sidewing {
             cache_net_wm_atoms(x11_display);
 
             x11_display.error_trap_push();
-            update_strut_window(xdisplay, monitor, bar_pixel_height);
-            apply_visible_window_role(xdisplay, xid);
+            apply_visible_window_role(xdisplay, xid, monitor, bar_pixel_height);
             if (!window_has_expected_geometry(xdisplay, xid, monitor, bar_pixel_height)) {
                 xdisplay.move_resize_window(
                     xid,
@@ -411,89 +406,21 @@ namespace Sidewing {
             net_wm_state_sticky_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_STICKY");
             net_wm_state_maximized_vert_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_VERT");
             net_wm_state_maximized_horz_atom = x11_display.get_xatom_by_name("_NET_WM_STATE_MAXIMIZED_HORZ");
-            net_wm_window_opacity_atom = x11_display.get_xatom_by_name("_NET_WM_WINDOW_OPACITY");
         }
 
-        private void apply_visible_window_role(X.Display xdisplay, X.Window xid) {
-            // Always a dock so the bar stays out of the taskbar/dock. Reserved space is
-            // driven by the separate strut_window, not the bar's own window type, so a
-            // NORMAL type here only leaks an untitled entry into the elementary dock.
+        private void apply_visible_window_role(X.Display xdisplay, X.Window xid, MonitorInfo monitor, int bar_height) {
+            // A dock so the bar stays out of the taskbar/dock, carrying its own strut the
+            // way wingpanel and plank do. A separate strut window would either be
+            // override-redirect (Gala ignores its strut) or a managed, class-less window
+            // the dock groups under Sidewing as a blank second entry.
             set_atom_property(xdisplay, xid, net_wm_window_type_atom, net_wm_window_type_dock_atom);
-            xdisplay.delete_property(xid, net_wm_strut_atom);
-            xdisplay.delete_property(xid, net_wm_strut_partial_atom);
+            if (settings_store.reserve_space_for_maximized_windows) {
+                set_strut_properties(xdisplay, xid, monitor, bar_height);
+            } else {
+                xdisplay.delete_property(xid, net_wm_strut_atom);
+                xdisplay.delete_property(xid, net_wm_strut_partial_atom);
+            }
             request_window_state(xdisplay, xid, net_wm_state_above_atom, net_wm_state_sticky_atom);
-        }
-
-        private void update_strut_window(X.Display xdisplay, MonitorInfo monitor, int bar_height) {
-            if (!settings_store.reserve_space_for_maximized_windows) {
-                unmap_strut_window();
-                return;
-            }
-
-            if (strut_window == 0) {
-                strut_window = X.create_simple_window(
-                    xdisplay,
-                    xdisplay.default_root_window(),
-                    monitor.x,
-                    monitor.y,
-                    1,
-                    1,
-                    0,
-                    0,
-                    0
-                );
-
-                // The window manager must manage this window for its strut to affect
-                // maximized-window placement. An override-redirect dock is invisible,
-                // but Gala ignores its reserved-space properties.
-                set_atom_property(
-                    xdisplay,
-                    strut_window,
-                    net_wm_window_type_atom,
-                    net_wm_window_type_dock_atom
-                );
-
-                uint32[] transparent = { 0 };
-                xdisplay.change_property(
-                    strut_window,
-                    net_wm_window_opacity_atom,
-                    X.XA_CARDINAL,
-                    32,
-                    X.PropMode.Replace,
-                    encode_uint32(transparent),
-                    transparent.length
-                );
-            }
-
-            xdisplay.move_resize_window(
-                strut_window,
-                monitor.x,
-                monitor.y,
-                1,
-                1
-            );
-            set_strut_properties(xdisplay, strut_window, monitor, bar_height);
-            if (!strut_window_is_mapped) {
-                xdisplay.map_window(strut_window);
-                strut_window_is_mapped = true;
-            }
-        }
-
-        private void unmap_strut_window() {
-            if (strut_window == 0 || !strut_window_is_mapped) {
-                return;
-            }
-
-            var x11_display = Gdk.Display.get_default() as Gdk.X11.Display;
-            if (x11_display == null) {
-                return;
-            }
-
-            x11_display.error_trap_push();
-            x11_display.get_xdisplay().unmap_window(strut_window);
-            x11_display.get_xdisplay().flush();
-            x11_display.error_trap_pop_ignored();
-            strut_window_is_mapped = false;
         }
 
         private void request_window_state(
