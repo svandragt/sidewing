@@ -97,5 +97,5 @@ esac
 echo "$overall"
 echo "---"
 printf '%s' "$menu"
-echo "---"
-echo "Refresh | refresh=true"
+# Sidewing appends its own separator and Refresh action, so this plugin stops
+# at the service list.
