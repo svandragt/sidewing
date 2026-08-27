@@ -16,7 +16,7 @@ Notes:
 
 - They are written for Linux and avoid macOS-specific commands.
 - The GitHub example requires the `gh` CLI and an authenticated session.
-- The service-status example needs `curl` and `jq`. It rolls up the Atlassian Statuspage health of several services into one traffic light. Add a service by appending a `name|status.json URL` line to the `SERVICES` list.
+- The service-status example needs `curl` and `jq`. It rolls up the health of several developer services (GitHub, Zenhub, Claude, Atlassian, Cloudflare, OpenAI, and Slack) into one traffic light. Add a service by appending a `name|URL` line to the `SERVICES` list; append `|slack` for Slack's status API, or leave the kind off for any Atlassian Statuspage site.
 - The public IP example uses `https://api.ipify.org`; network failure is handled as a normal plugin error state.
 - Variable-backed plugins get a `<plugin>.vars.json` sidecar created next to the plugin when Sidewing discovers them.
 

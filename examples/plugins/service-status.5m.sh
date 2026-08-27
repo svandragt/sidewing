@@ -1,19 +1,24 @@
 #!/bin/sh
 
 # <xbar.title>Service Status</xbar.title>
-# <xbar.version>1.0</xbar.version>
+# <xbar.version>1.1</xbar.version>
 # <xbar.author>Sidewing</xbar.author>
-# <xbar.desc>Rolls up the Statuspage health of GitHub, Zenhub, and Claude into one traffic light. Click to see each service.</xbar.desc>
+# <xbar.desc>Rolls up the health of several developer services into one traffic light. Click to see each service.</xbar.desc>
 # <xbar.dependencies>curl,jq</xbar.dependencies>
 
 set -u
 
-# name|status.json URL. Add a service by appending a line; the human-readable
-# page is derived by stripping the /api/v2/status.json suffix. Any Atlassian
-# Statuspage site works unchanged.
+# name|URL[|kind]. kind defaults to "statuspage" (Atlassian Statuspage v2, the
+# /api/v2/status.json schema); "slack" handles Slack's own current-status API.
+# Add a service by appending a line; for a Statuspage site the human-readable
+# page is derived by stripping the /api/v2/status.json suffix.
 SERVICES="GitHub|https://www.githubstatus.com/api/v2/status.json
 Zenhub|https://status.zenhub.com/api/v2/status.json
-Claude|https://status.claude.com/api/v2/status.json"
+Claude|https://status.claude.com/api/v2/status.json
+Atlassian|https://status.atlassian.com/api/v2/status.json
+Cloudflare|https://www.cloudflarestatus.com/api/v2/status.json
+OpenAI|https://status.openai.com/api/v2/status.json
+Slack|https://slack-status.com/api/v2.0.0/current|slack"
 
 # Statuspage indicator -> dot + severity rank. Unknown counts as a warning so a
 # failed check never masquerades as green.
@@ -64,23 +69,52 @@ IFS='
 for line in $SERVICES; do
     IFS="$old_ifs"
     name="${line%%|*}"
-    url="${line#*|}"
+    rest="${line#*|}"
+    url="${rest%%|*}"
+    if [ "$rest" = "$url" ]; then
+        kind="statuspage"
+    else
+        kind="${rest#*|}"
+    fi
     [ -n "$name" ] || continue
 
-    resp="$(curl -fsS --max-time 8 "$url" 2>/dev/null)" || resp=""
-    if [ -n "$resp" ]; then
-        indicator="$(printf '%s' "$resp" | jq -r '.status.indicator // "unknown"' 2>/dev/null)"
-        desc="$(printf '%s' "$resp" | jq -r '.status.description // "Unknown"' 2>/dev/null)"
-    else
-        indicator="unknown"
-        desc="Unreachable"
-    fi
+    case "$kind" in
+        slack)
+            resp="$(curl -fsSL --max-time 8 "$url" 2>/dev/null)" || resp=""
+            if [ -n "$resp" ]; then
+                if [ "$(printf '%s' "$resp" | jq -r '.status // "unknown"' 2>/dev/null)" = "ok" ]; then
+                    indicator="none"
+                    desc="All Systems Operational"
+                elif printf '%s' "$resp" | jq -e '.active_incidents[]? | select(.type == "outage")' >/dev/null 2>&1; then
+                    indicator="major"
+                    desc="$(printf '%s' "$resp" | jq -r '.active_incidents[0].title // "Service outage"' 2>/dev/null)"
+                else
+                    indicator="minor"
+                    desc="$(printf '%s' "$resp" | jq -r '.active_incidents[0].title // "Active incident"' 2>/dev/null)"
+                fi
+            else
+                indicator="unknown"
+                desc="Unreachable"
+            fi
+            page="https://slack-status.com/"
+            ;;
+        *)
+            resp="$(curl -fsS --max-time 8 "$url" 2>/dev/null)" || resp=""
+            if [ -n "$resp" ]; then
+                indicator="$(printf '%s' "$resp" | jq -r '.status.indicator // "unknown"' 2>/dev/null)"
+                desc="$(printf '%s' "$resp" | jq -r '.status.description // "Unknown"' 2>/dev/null)"
+            else
+                indicator="unknown"
+                desc="Unreachable"
+            fi
+            page="${url%/api/v2/status.json}/"
+            ;;
+    esac
 
     dot="$(dot_for "$indicator")"
     sev="$(sev_for "$indicator")"
     [ "$sev" -gt "$worst" ] && worst="$sev"
 
-    page="${url%/api/v2/status.json}/"
     menu="${menu}${dot} ${name} — ${desc} | href=${page}
 "
     IFS='
