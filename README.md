@@ -117,6 +117,18 @@ From the bar app menu you can:
 - toggle whether the bar should reserve space for maximized windows on X11
 - reload (rediscover the plugins directory and refresh all plugins)
 
+To reload a running bar without the menu, run:
+
+```sh
+sidewing reload
+```
+
+This asks the running instance to rediscover the plugins directory and refresh
+every plugin, the same as the menu action. It exits non-zero if no bar is
+running. The reload is exposed as a GApplication action, so
+`gapplication action com.vandragt.sidewing reload` works too — handy for a
+keybinding or a script that has just installed a new plugin.
+
 Each plugin's own popover ends with a footer containing a **Refresh** button and, when the plugin declares variables, an **Edit Variables…** button that opens a generated form (see [Plugin Variables](#plugin-variables)).
 
 On X11, Sidewing also detects whether the selected monitor currently has a maximized window. That state is checked when the bar appears and then polled periodically so the bar can switch between its translucent and opaque styles as window state changes.

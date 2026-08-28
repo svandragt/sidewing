@@ -79,8 +79,18 @@ namespace Sidewing {
                 variables_editor
             );
             load_css();
+            register_reload_action();
 
             log_service.info("Sidewing initialized");
+        }
+
+        private void register_reload_action() {
+            var reload_action = new SimpleAction("reload", null);
+            reload_action.activate.connect(() => {
+                log_service.info("Reload requested via action");
+                plugin_manager.reload();
+            });
+            add_action(reload_action);
         }
 
         private void install_glib_log_handler() {
