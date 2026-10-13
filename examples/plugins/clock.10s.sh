@@ -3,7 +3,7 @@
 # <xbar.title>Clock</xbar.title>
 # <xbar.version>1.0</xbar.version>
 # <xbar.author>Sidewing</xbar.author>
-# <xbar.desc>Shows the current time, in the bar.</xbar.desc>
+# <xbar.desc>Shows the current time.</xbar.desc>
 # <xbar.dependencies>date</xbar.dependencies>
 
 set -eu
