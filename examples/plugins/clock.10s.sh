@@ -8,5 +8,5 @@
 
 set -eu
 
-# Refreshes every second so the minute flips on time; a 1m refresh can lag by up to 59s.
+# 10s keeps the minute at most 10s late; a 1m refresh can lag by up to 59s.
 date "+%a, %-d %b %H:%M"
