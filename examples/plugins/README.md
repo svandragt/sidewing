@@ -5,6 +5,7 @@ These example plugins are intended to ship with `Sidewing` as Linux-friendly ref
 Included examples:
 
 - [action-demo.30s.sh](./action-demo.30s.sh)
+- [clock.1s.sh](./clock.1s.sh)
 - [public-ip.5m.sh](./public-ip.5m.sh)
 - [available-memory.10s.sh](./available-memory.10s.sh)
 - [available-disk-space.1m.sh](./available-disk-space.1m.sh)
@@ -25,6 +26,7 @@ To try them manually by executing the scripts directly:
 ```sh
 chmod +x examples/plugins/*.sh
 ./examples/plugins/action-demo.30s.sh
+./examples/plugins/clock.1s.sh
 ./examples/plugins/public-ip.5m.sh
 ./examples/plugins/available-memory.10s.sh
 ./examples/plugins/available-disk-space.1m.sh

@@ -224,6 +224,7 @@ Each plugin popover footer includes a **Refresh** button. Plugins that declare a
 Bundled examples live in [`examples/plugins`](./examples/plugins/):
 
 - [`action-demo.30s.sh`](./examples/plugins/action-demo.30s.sh)
+- [`clock.1s.sh`](./examples/plugins/clock.1s.sh)
 - [`available-memory.10s.sh`](./examples/plugins/available-memory.10s.sh)
 - [`available-disk-space.1m.sh`](./examples/plugins/available-disk-space.1m.sh)
 - [`public-ip.5m.sh`](./examples/plugins/public-ip.5m.sh)
