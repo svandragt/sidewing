@@ -9,4 +9,4 @@
 set -eu
 
 # 10s keeps the minute at most 10s late; a 1m refresh can lag by up to 59s.
-date "+%a, %-d %b %H:%M"
+date "+%a, %-d %b   %H:%M"
